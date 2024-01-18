@@ -11,6 +11,7 @@ Since the mod is still in development, it may be unstable.
 # Credits
 
 Thanks to Woecust for modeling the interior (and check out his mod, [Immersive Visor](https://thunderstore.io/c/lethal-company/p/Woecust/Immersive_Visor)!).
+
 Thanks to IAmBatby, the developer of LLL, for all his help in moving to [LethalLevelLoader](https://thunderstore.io/c/lethal-company/p/IAmBatby/LethalLevelLoader)!
 
 
