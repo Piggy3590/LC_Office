@@ -31,8 +31,7 @@ Every music was composed by nicopatty, special thanks to nicopatty for the great
 
 **0.0.4**  
 	- moved to [LethalLevelLoader](https://thunderstore.io/c/lethal-company/p/IAmBatby/LethalLevelLoader).
- 
-	- Changed the layout of the server racks.
+ Changed the layout of the server racks.
  
 	- Fixed an issue where some items would not set the elevator as their parent object.
  
