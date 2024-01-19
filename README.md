@@ -43,3 +43,8 @@ Every music was composed by nicopatty, special thanks to nicopatty for the great
 	- Lots of optimization work.
  
 	- Sadly no monster spawns yet :/
+
+**0.0.5** 
+
+	- edited README.md
+ 
