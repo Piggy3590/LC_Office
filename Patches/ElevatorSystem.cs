@@ -64,7 +64,6 @@ namespace LCOffice.Patches
 
         void LateUpdate()
         {
-            RoundMapSystem.Instance.isOffice = true;
             if (!RoundMapSystem.Instance.isOffice)
             {
                 return;
