@@ -1,4 +1,4 @@
-﻿using BepInEx;
+using BepInEx;
 using BepInEx.Logging;
 using HarmonyLib;
 using System;
@@ -18,6 +18,7 @@ using System.Collections.Generic;
 using BepInEx.Configuration;
 using System.Linq;
 using static LethalLib.Modules.Levels;
+using UnityEngine.Assertions;
 
 [assembly: SecurityPermission(SecurityAction.RequestMinimum, SkipVerification = true)]
 
@@ -28,7 +29,7 @@ namespace LCOffice
     {
         private const string modGUID = "Piggy.LCOffice";
         private const string modName = "LCOffice";
-        private const string modVersion = "0.1.1";
+        private const string modVersion = "0.1.2";
 
         private readonly Harmony harmony = new Harmony(modGUID);
 
@@ -65,6 +66,10 @@ namespace LCOffice
         public static AudioClip ripPlayerApart;
         public static AudioClip cry1;
         public static AudioClip dogHowl;
+        public static AudioClip stomachGrowl;
+
+        public static AudioClip eatenExplode;
+        public static AudioClip dogSneeze;
 
         public static GameObject shrimpPrefab;
         public static EnemyType shrimpEnemy;
@@ -82,6 +87,8 @@ namespace LCOffice
         private ConfigEntry<int> configOfficeRarity;
         private ConfigEntry<string> configMoons;
 
+        private ConfigEntry<string> shrimpSpawnableMoons;
+
         public static bool setKorean;
 
         void Awake()
@@ -94,6 +101,8 @@ namespace LCOffice
             this.configGuaranteedOffice = base.Config.Bind<bool>("General", "OfficeGuaranteed", false, new ConfigDescription("If enabled, the office will be effectively guaranteed to spawn. Only recommended for debugging/sightseeing purposes.", null, Array.Empty<object>()));
             this.configMoons = base.Config.Bind<string>("General", "OfficeMoonsList", "free", new ConfigDescription("The moon(s) that the office can spawn on, in the form of a comma separated list of selectable level names (e.g. \"TitanLevel,RendLevel,DineLevel\")\nNOTE: These must be the internal data names of the levels (all vanilla moons are \"MoonnameLevel\", for modded moon support you will have to find their name if it doesn't follow the convention).\nThe following strings: \"all\", \"vanilla\", \"modded\", \"paid\", \"free\" are dynamic presets which add the dungeon to that specified group (string must only contain one of these, or a manual moon name list).\nDefault dungeon generation size is balanced around the dungeon scale multiplier of Titan (2.35), moons with significantly different dungeon size multipliers (see Lethal Company wiki for values) may result in dungeons that are extremely small/large.", null, Array.Empty<object>()));
             
+            this.shrimpSpawnableMoons = base.Config.Bind<string>("Spawn", "ShrimpSpawnableMoons", "2,4,5,3,6,8,8,10", new ConfigDescription("Set the shrimp spawn probability for each moon. In this order:\n(experimentation, assurance, vow, march, offense, rend, dine, titan).\nOnly vanilla moon(s) can be configured.", null, Array.Empty<object>()));
+
             setKorean = (bool)base.Config.Bind<bool>("Translation", "Enable Korean", false, "Set language to Korean.").Value;
 
 
@@ -157,8 +166,8 @@ namespace LCOffice
             AssetBundleLoader.RegisterExtendedDungeonFlow(officeExtendedDungeonFlow);
 
             shrimpPrefab = Bundle.LoadAsset<GameObject>("Shrimp.prefab");
+            shrimpPrefab.AddComponent<ShrimpAI>();
             shrimpEnemy = Bundle.LoadAsset<EnemyType>("ShrimpEnemy.asset");
-            shrimpEnemy.enemyPrefab.AddComponent<ShrimpAI>();
 
             GameObject startroom = Bundle.LoadAsset<GameObject>("OfficeStartRoom.prefab");
             startroom.AddComponent<ElevatorSystem>();
@@ -190,6 +199,10 @@ namespace LCOffice
             ripPlayerApart = Bundle.LoadAsset<AudioClip>("RipPlayerApart.ogg");
             cry1 = Bundle.LoadAsset<AudioClip>("Cry1.wav");
             dogHowl = Bundle.LoadAsset<AudioClip>("DogHowl.wav");
+            stomachGrowl = Bundle.LoadAsset<AudioClip>("StomachGrowl.ogg");
+
+            eatenExplode = Bundle.LoadAsset<AudioClip>("eatenExplode.wav");
+            dogSneeze = Bundle.LoadAsset<AudioClip>("Sneeze.ogg");
 
             stanleyVoiceline1 = Bundle.LoadAsset<AudioClip>("stanley.wav");
             
@@ -209,16 +222,27 @@ namespace LCOffice
                 shrimpTerminalKeyword.word = "쉬림프";
             }
 
+            int[] numbers = shrimpSpawnableMoons.Value.Split(',').Select(int.Parse).ToArray();
             
-            LethalLib.Modules.Enemies.RegisterEnemy(shrimpEnemy, 10, Levels.LevelTypes.ExperimentationLevel, Enemies.SpawnType.Default, shrimpTerminalNode, shrimpTerminalKeyword);
-            LethalLib.Modules.Enemies.RegisterEnemy(shrimpEnemy, 10, Levels.LevelTypes.AssuranceLevel, Enemies.SpawnType.Default, shrimpTerminalNode, shrimpTerminalKeyword);
-            LethalLib.Modules.Enemies.RegisterEnemy(shrimpEnemy, 14, Levels.LevelTypes.VowLevel, Enemies.SpawnType.Default, shrimpTerminalNode, shrimpTerminalKeyword);
-            LethalLib.Modules.Enemies.RegisterEnemy(shrimpEnemy, 11, Levels.LevelTypes.MarchLevel, Enemies.SpawnType.Default, shrimpTerminalNode, shrimpTerminalKeyword);
-            LethalLib.Modules.Enemies.RegisterEnemy(shrimpEnemy, 8, Levels.LevelTypes.OffenseLevel, Enemies.SpawnType.Default, shrimpTerminalNode, shrimpTerminalKeyword);
-            LethalLib.Modules.Enemies.RegisterEnemy(shrimpEnemy, 25, Levels.LevelTypes.RendLevel, Enemies.SpawnType.Default, shrimpTerminalNode, shrimpTerminalKeyword);
-            LethalLib.Modules.Enemies.RegisterEnemy(shrimpEnemy, 30, Levels.LevelTypes.DineLevel, Enemies.SpawnType.Default, shrimpTerminalNode, shrimpTerminalKeyword);
-            LethalLib.Modules.Enemies.RegisterEnemy(shrimpEnemy, 40, Levels.LevelTypes.TitanLevel, Enemies.SpawnType.Default, shrimpTerminalNode, shrimpTerminalKeyword);
+            LethalLib.Modules.Enemies.RegisterEnemy(shrimpEnemy, numbers[0], Levels.LevelTypes.ExperimentationLevel, Enemies.SpawnType.Default, shrimpTerminalNode, shrimpTerminalKeyword);
+            Plugin.mls.LogInfo("Shrimp spawn chance in ExperimentationLevel: " + numbers[0]);
+            LethalLib.Modules.Enemies.RegisterEnemy(shrimpEnemy, numbers[1], Levels.LevelTypes.AssuranceLevel, Enemies.SpawnType.Default, shrimpTerminalNode, shrimpTerminalKeyword);
+            Plugin.mls.LogInfo("Shrimp spawn chance in AssuranceLevel: " + numbers[1]);
+            LethalLib.Modules.Enemies.RegisterEnemy(shrimpEnemy, numbers[2], Levels.LevelTypes.VowLevel, Enemies.SpawnType.Default, shrimpTerminalNode, shrimpTerminalKeyword);
+            Plugin.mls.LogInfo("Shrimp spawn chance in VowLevel: " + numbers[2]);
+            LethalLib.Modules.Enemies.RegisterEnemy(shrimpEnemy, numbers[3], Levels.LevelTypes.MarchLevel, Enemies.SpawnType.Default, shrimpTerminalNode, shrimpTerminalKeyword);
+            Plugin.mls.LogInfo("Shrimp spawn chance in MarchLevel: " + numbers[3]);
+            LethalLib.Modules.Enemies.RegisterEnemy(shrimpEnemy, numbers[4], Levels.LevelTypes.OffenseLevel, Enemies.SpawnType.Default, shrimpTerminalNode, shrimpTerminalKeyword);
+            Plugin.mls.LogInfo("Shrimp spawn chance in OffenseLevel: " + numbers[4]);
+            LethalLib.Modules.Enemies.RegisterEnemy(shrimpEnemy, numbers[5], Levels.LevelTypes.RendLevel, Enemies.SpawnType.Default, shrimpTerminalNode, shrimpTerminalKeyword);
+            Plugin.mls.LogInfo("Shrimp spawn chance in RendLevel: " + numbers[5]);
+            LethalLib.Modules.Enemies.RegisterEnemy(shrimpEnemy, numbers[6], Levels.LevelTypes.DineLevel, Enemies.SpawnType.Default, shrimpTerminalNode, shrimpTerminalKeyword);
+            Plugin.mls.LogInfo("Shrimp spawn chance in DineLevel: " + numbers[6]);
+            LethalLib.Modules.Enemies.RegisterEnemy(shrimpEnemy, numbers[7], Levels.LevelTypes.TitanLevel, Enemies.SpawnType.Default, shrimpTerminalNode, shrimpTerminalKeyword);
+            Plugin.mls.LogInfo("Shrimp spawn chance in TitanLevel: " + numbers[7]);
             
+            LethalLib.Modules.NetworkPrefabs.RegisterNetworkPrefab(shrimpPrefab);
+
             //LethalLib.Modules.Enemies.RegisterEnemy(shrimpEnemy, 0, Levels.LevelTypes.All, Enemies.SpawnType.Default, shrimpTerminalNode, shrimpTerminalKeyword);
 
             //shrimpEnemy.MaxCount = CustomConfig.MaxPerLevel;
@@ -228,6 +252,7 @@ namespace LCOffice
             harmony.PatchAll(typeof(PlayerControllerBPatch));
             harmony.PatchAll(typeof(GrabbableObjectPatch));
             harmony.PatchAll(typeof(TerminalPatch));
+            harmony.PatchAll(typeof(StartOfRoundPatch));
             harmony.PatchAll(typeof(GameNetworkManagerPatch));
 
             //DungeonDef dungeonRef = new DungeonDef();
