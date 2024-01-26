@@ -2,6 +2,7 @@
 using LethalNetworkAPI;
 using Mono.Cecil.Cil;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -24,7 +25,7 @@ namespace LCOffice.Patches
         */
         public static LethalNetworkVariable<bool> isElevatorDowned = new LethalNetworkVariable<bool>(identifier: "isElevatorDowned");
         public static LethalNetworkVariable<bool> isElevatorClosed = new LethalNetworkVariable<bool>(identifier: "isElevatorClosed");
-        public static LethalNetworkVariable<float> elevatorTimer = new LethalNetworkVariable<float>(identifier: "elevatorTimer");
+        public float elevatorTimer;
 
         public static LethalNetworkVariable<bool> spawnShrimpBool = new LethalNetworkVariable<bool>(identifier: "spawnShrimpBool");
 
@@ -36,16 +37,39 @@ namespace LCOffice.Patches
 
         public Animator[] panelAnimators;
 
+        public bool performanceCheck;
+
         public bool isSetupEnd;
 
         void Start()
         {
             GameObject.Find("ElevatorMusic").AddComponent<ElevatorMusic>();
-            
+            ScanNodeProperties[] scanNodeProperties = GameObject.FindObjectsOfType<ScanNodeProperties>();
+            if (Plugin.setKorean)
+            {
+                foreach (ScanNodeProperties scanNodeProperty in scanNodeProperties)
+                {
+                    if (scanNodeProperty.headerText == "Elevator Controller")
+                    {
+                        scanNodeProperty.headerText = "엘리베이터 조작기";
+                    }
+                }
+            }
+            if (GameObject.Find("ShrimpSpawn"))
+            {
+                RoundManager.Instance.SpawnEnemyOnServer(GameObject.Find("ShrimpSpawn").transform.position, 0f, 13);
+                GameObject.Destroy(GameObject.Find("ShrimpSpawn"));
+            }
         }
 
         void LateUpdate()
         {
+            RoundMapSystem.Instance.isOffice = true;
+            if (!RoundMapSystem.Instance.isOffice)
+            {
+                return;
+            }
+            
             if (!isSetupEnd)
             {
                 animator = this.transform.GetChild(0).GetComponent<Animator>();
@@ -94,30 +118,39 @@ namespace LCOffice.Patches
 
             if (isElevatorDowned.Value && !animator.GetBool("goDown"))
             {
-                elevatorTimer.Value += Time.deltaTime;
-                if (elevatorTimer.Value > 0)
+                elevatorTimer += Time.deltaTime;
+                if (elevatorTimer > 0)
                 {
-                    isElevatorClosed.Value = true;
-                    if (elevatorTimer.Value > 0.8f)
+                    if (!isElevatorClosed.Value)
+                    {
+                        isElevatorClosed.Value = true;
+                    }
+                    if (elevatorTimer > 3f)
                     {
                         audioSource.PlayOneShot(Plugin.ElevatorDown);
                         animator.SetBool("goDown", true);
-                        isElevatorDowned.Value =true;
+                        if (!isElevatorDowned.Value)
+                        {
+                            isElevatorDowned.Value = true;
+                        }
                     }
                 }
             }
 
             if (!isElevatorDowned.Value && animator.GetBool("goDown"))
             {
-                elevatorTimer.Value += Time.deltaTime;
-                if (elevatorTimer.Value > 0)
+                elevatorTimer += Time.deltaTime;
+                if (elevatorTimer > 0)
                 {
                     isElevatorClosed.Value = true;
-                    if (elevatorTimer.Value > 0.8f)
+                    if (elevatorTimer > 3f)
                     {
                         audioSource.PlayOneShot(Plugin.ElevatorUp);
                         animator.SetBool("goDown", false);
-                        isElevatorDowned.Value = false;
+                        if (!isElevatorDowned.Value)
+                        {
+                            isElevatorDowned.Value = false;
+                        }
                     }
                 }
             }
@@ -134,16 +167,10 @@ namespace LCOffice.Patches
                 if (isElevatorClosed.Value)
                 {
                     isElevatorClosed.Value = false;
-                    elevatorTimer.Value = 0;
-                    isElevatorClosed.Value = false;
+                    elevatorTimer = 0;
                 }
             }
-            if (GameObject.Find("StartRoomElevator") == null)
-            {
-                GameObject.Destroy(this);
-            }
         }
-
         void ElevatorGoUp(PlayerControllerB playerController)
         {
             //elevatorSendUpEvent.InvokeAllClients();

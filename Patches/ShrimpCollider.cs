@@ -14,7 +14,7 @@ using UnityEngine.InputSystem.HID;
 
 namespace LCOffice.Patches
 {
-    public class ShrimpCollider : NetworkBehaviour, IHittable
+    public class ShrimpCollider : MonoBehaviour, IHittable
     {
         public ShrimpAI shrimpAI;
         void Start()

@@ -16,35 +16,39 @@ namespace LCOffice.Patches
     {
         [HarmonyPrefix]
         [HarmonyPatch("Awake")]
-        private static void Awake_Prefix()
+        private static void Awake_Prefix(StartOfRound __instance)
         {
-            StartOfRound.Instance.gameObject.AddComponent<RoundMapSystem>();
+            __instance.gameObject.AddComponent<RoundMapSystem>();
         }
         [HarmonyPrefix]
         [HarmonyPatch("SceneManager_OnUnloadComplete")]
         private static void SceneManager_OnUnloadComplete_Prefix()
         {
-            PlayerElevatorCheck[] playerElevatorCheck = GameObject.FindObjectsOfType<PlayerElevatorCheck>();
-            ItemElevatorCheck[] itemElevatorChecks = GameObject.FindObjectsOfType<ItemElevatorCheck>();
-            foreach (PlayerElevatorCheck player in playerElevatorCheck)
+            if (GameObject.FindObjectsOfType<PlayerElevatorCheck>() != null)
             {
-                player.elevatorCollider = null;
-                player.isAppendedToArray = false;
-                player.isConfirmedShrimp = false;
+                PlayerElevatorCheck[] playerElevatorCheck = GameObject.FindObjectsOfType<PlayerElevatorCheck>();
+                foreach (PlayerElevatorCheck player in playerElevatorCheck)
+                {
+                    player.elevatorCollider = null;
+                    player.isConfirmedShrimp = false;
+                }
             }
-            foreach (ItemElevatorCheck itemElevatorCheck in itemElevatorChecks)
+            if (GameObject.FindObjectsOfType<ItemElevatorCheck>() != null)
             {
-                itemElevatorCheck.elevatorCollider = null;
-                itemElevatorCheck.isAppendedToArray = false;
+                ItemElevatorCheck[] itemElevatorChecks = GameObject.FindObjectsOfType<ItemElevatorCheck>();
+                foreach (ItemElevatorCheck itemElevatorCheck in itemElevatorChecks)
+                {
+                    itemElevatorCheck.elevatorCollider = null;
+                    itemElevatorCheck.isAppendedToArray = false;
+                }
             }
 
-            if (GameObject.Find("InsideCollider") != null)
+            if (GameObject.FindObjectOfType<ShrimpAI>() != null)
             {
-                RoundMapSystem.Instance.isOffice = true;
-            }else
-            {
-                RoundMapSystem.Instance.isOffice = false;
+                GameObject.Destroy(GameObject.FindObjectOfType<ShrimpAI>().gameObject);
             }
+
+            RoundMapSystem.Instance.isChecked = false;
         }
     }
 }

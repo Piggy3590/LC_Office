@@ -46,6 +46,10 @@ namespace LCOffice.Patches
 
         private void Update()
         {
+            if (!RoundMapSystem.Instance.isOffice)
+            {
+                return;
+            }
             checkBounds.center = this.transform.position;
 
             foreach (GameObject colliderObject in allPlayerColliders)

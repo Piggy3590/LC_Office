@@ -21,11 +21,7 @@ namespace LCOffice.Patches
     public class PlayerElevatorCheck : MonoBehaviour
     {
         public bool isInElevatorB;
-        public bool isAppendedToArray;
         public ElevatorCollider elevatorCollider;
-
-        public Transform mainCamera;
-        public Transform cameraContainer;
 
         public bool isInElevatorNotOwner;
 
@@ -36,32 +32,6 @@ namespace LCOffice.Patches
         void Start()
         {
             playerControllerB = this.GetComponent<PlayerControllerB>();
-        }
-
-        void LateUpdate()
-        {
-            if (!isAppendedToArray && !StartOfRound.Instance.inShipPhase)
-            {
-                if (GameObject.Find("ElevatorScreenDoor") != null)
-                {
-                    if (!RoundMapSystem.Instance.isOffice) { RoundMapSystem.Instance.isOffice = true; }
-                }
-                else
-                {
-                    if (RoundMapSystem.Instance.isOffice) { RoundMapSystem.Instance.isOffice = false; }
-                }
-                if (RoundMapSystem.Instance.isOffice)
-                {
-                    if (GameObject.Find("Stanley") != null)
-                    {
-                        if (GameObject.Find("Stanley").GetComponent<StanleyTrigger>() == null)
-                        {
-                            GameObject.Find("Stanley").AddComponent<StanleyTrigger>();
-                        }
-                    }
-                }
-                isAppendedToArray = true;
-            }
         }
     }
 }

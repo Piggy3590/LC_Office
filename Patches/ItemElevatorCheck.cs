@@ -45,9 +45,7 @@ namespace LCOffice.Patches
                 isAppendedToArray = true;
             }
 
-
-
-            if (isInElevatorB && grabbableObject.isHeld)
+            if (RoundMapSystem.Instance.isOffice && isInElevatorB && grabbableObject.isHeld)
             {
                 isInElevatorB = false;
             }
