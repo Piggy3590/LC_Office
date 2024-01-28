@@ -112,37 +112,23 @@ Every music was composed by nicopatty, special thanks to nicopatty for the great
 **0.1.1**
 
 	- Added pictures to README.md.
-
 	- Fixed extreme frame drops occurring when an interior other than an office was created.
-
 	- Reduced the time it takes for an enraged Shrimp to reach its maximum speed(acceleration remains the same).
-
 	- Added configuration related to the spawning of Shrimp.
-
 **0.1.2**
 
 	- Added “Satisfaction” value to Shrimp. Shrimp will now stop following the player for a while if they have enough food. (not tested)
-	
 	- Fixed softlock occurring when shrimp spawn on all clients except the host.
-		
 **0.1.3**
 
 	- Added two large rooms.
-
 	- Added a prop to several rooms.
-
 	- Remodeled the starting room.
-
 	- Improved dungeon generation.
-
 	- Added Lung apparatus socket machine spawn.
-
 	- improved the elevator system, but haven't tested it yet.
-
 	- Fixed a bug where Shrimp's "Satisfaction" system did not work properly.
-
 **0.1.4**
 
 	s m o l Update
-
 	- Minor performance improvements.
