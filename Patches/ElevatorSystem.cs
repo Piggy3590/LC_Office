@@ -35,31 +35,20 @@ namespace LCOffice.Patches
 
         public AudioSource audioSource;
 
-        public Animator[] panelAnimators;
+        public List<Animator> panelAnimators;
+        public List<Animator> buttonLightAnimators;
 
         public bool performanceCheck;
+        public GameObject storageObject;
 
         public bool isSetupEnd;
 
         void Start()
         {
-            GameObject.Find("ElevatorMusic").AddComponent<ElevatorMusic>();
-            ScanNodeProperties[] scanNodeProperties = GameObject.FindObjectsOfType<ScanNodeProperties>();
-            if (Plugin.setKorean)
-            {
-                foreach (ScanNodeProperties scanNodeProperty in scanNodeProperties)
-                {
-                    if (scanNodeProperty.headerText == "Elevator Controller")
-                    {
-                        scanNodeProperty.headerText = "엘리베이터 조작기";
-                    }
-                }
-            }
-            if (GameObject.Find("ShrimpSpawn"))
-            {
-                RoundManager.Instance.SpawnEnemyOnServer(GameObject.Find("ShrimpSpawn").transform.position, 0f, 13);
-                GameObject.Destroy(GameObject.Find("ShrimpSpawn"));
-            }
+            isElevatorDowned.Value = false;
+            isElevatorClosed.Value = false;
+            elevatorScreenDoorAnimator.SetBool("open", true);
+            spawnShrimpBool.Value = false;
         }
 
         void LateUpdate()
@@ -68,31 +57,16 @@ namespace LCOffice.Patches
             {
                 return;
             }
-            
-            if (!isSetupEnd)
-            {
-                animator = this.transform.GetChild(0).GetComponent<Animator>();
-                audioSource = GameObject.Find("ElevatorSound").GetComponent<AudioSource>();
-                doorAnimator = GameObject.Find("DoorBone").GetComponent<Animator>();
-                elevatorScreenDoorAnimator = GameObject.Find("ElevatorScreenDoor").GetComponent<Animator>();
-                panelAnimators = GameObject.FindObjectsOfType<Animator>();
-                foreach (Animator panelAnimator in panelAnimators)
-                {
-                    if (panelAnimator.gameObject.name == "ElevatorPanel")
-                    {
-                        panelAnimator.transform.GetChild(1).GetChild(0).GetComponent<InteractTrigger>().onInteract.AddListener(ElevatorGoUp);
-                        panelAnimator.transform.GetChild(2).GetChild(0).GetComponent<InteractTrigger>().onInteract.AddListener(ElevatorGoDown);
-                        panelAnimator.transform.GetChild(3).GetChild(1).GetComponent<TMP_Text>();
-                        panelAnimator.transform.GetChild(3).GetChild(1).GetComponent<TMP_Text>().font = GameObject.Find("doorHydraulics").GetComponent<TMP_Text>().font;
-                        panelAnimator.transform.GetChild(3).GetChild(1).GetComponent<TMP_Text>().material = GameObject.Find("doorHydraulics").GetComponent<TMP_Text>().material;
-                        panelAnimator.transform.GetChild(3).GetChild(1).GetComponent<TMP_Text>().color = new Color(1, 0.3444f, 0, 1);
-                    }
-                }
-                GameObject.Find("InsideCollider").gameObject.AddComponent<ElevatorCollider>();
-                GameObject.Find("OutOfBoundsTriggerFactory").transform.position = new Vector3(0, -800f, 0);
 
-                isSetupEnd = true;
-            }
+            //This code will only run once.
+            Setup();
+
+            /*
+            storageObject.transform.SetParent(animator.transform);
+            storageObject.transform.position = GameObject.Find("TestClosetPos").transform.position;
+            storageObject.transform.localRotation = Quaternion.Euler(-90, 0, 0);
+            */
+
             if (isElevatorClosed.Value)
             {
                 if (doorAnimator.GetBool("closed"))
@@ -118,6 +92,10 @@ namespace LCOffice.Patches
             if (isElevatorDowned.Value && !animator.GetBool("goDown"))
             {
                 elevatorTimer += Time.deltaTime;
+                foreach (Animator buttonLightAnimator in buttonLightAnimators)
+                {
+                    buttonLightAnimator.SetBool("up", false);
+                }
                 if (elevatorTimer > 0)
                 {
                     if (!isElevatorClosed.Value)
@@ -138,6 +116,10 @@ namespace LCOffice.Patches
 
             if (!isElevatorDowned.Value && animator.GetBool("goDown"))
             {
+                foreach (Animator buttonLightAnimator in buttonLightAnimators)
+                {
+                    buttonLightAnimator.SetBool("up", true);
+                }
                 elevatorTimer += Time.deltaTime;
                 if (elevatorTimer > 0)
                 {
@@ -158,7 +140,10 @@ namespace LCOffice.Patches
             {
                 foreach (Animator panelAnimator in panelAnimators)
                 {
-                    if (panelAnimator.gameObject.name == "ElevatorPanel")
+                    if (Plugin.setKorean)
+                    {
+                        panelAnimator.transform.GetChild(3).GetChild(1).GetComponent<TMP_Text>().text = "대기 중";
+                    }else
                     {
                         panelAnimator.transform.GetChild(3).GetChild(1).GetComponent<TMP_Text>().text = "Idle";
                     }
@@ -170,44 +155,161 @@ namespace LCOffice.Patches
                 }
             }
         }
-        void ElevatorGoUp(PlayerControllerB playerController)
-        {
-            //elevatorSendUpEvent.InvokeAllClients();
-            ElevatorUp();
-        }
 
-        void ElevatorGoDown(PlayerControllerB playerController)
+        void Setup()
         {
-            //elevatorSendDownEvent.InvokeAllClients();
-            ElevatorDown();
-        }
+            if (!isSetupEnd)
+            {
+                animator = this.transform.GetChild(0).GetComponent<Animator>();
+                audioSource = GameObject.Find("ElevatorSound").GetComponent<AudioSource>();
+                doorAnimator = GameObject.Find("DoorBone").GetComponent<Animator>();
+                elevatorScreenDoorAnimator = GameObject.Find("ElevatorScreenDoor").GetComponent<Animator>();
+                Animator[] animators = GameObject.FindObjectsOfType<Animator>();
+                foreach (Animator panelAnimator in animators)
+                {
+                    if (panelAnimator.gameObject.name == "ElevatorPanel")
+                    {
+                        panelAnimator.transform.GetChild(1).GetChild(0).GetComponent<InteractTrigger>().onInteract.AddListener(ElevatorUpTrigger);
+                        panelAnimator.transform.GetChild(2).GetChild(0).GetComponent<InteractTrigger>().onInteract.AddListener(ElevatorDownTrigger);
+                        panelAnimator.transform.GetChild(3).GetChild(1).GetComponent<TMP_Text>();
+                        panelAnimator.transform.GetChild(3).GetChild(1).GetComponent<TMP_Text>().font = GameObject.Find("doorHydraulics").GetComponent<TMP_Text>().font;
+                        panelAnimator.transform.GetChild(3).GetChild(1).GetComponent<TMP_Text>().material = GameObject.Find("doorHydraulics").GetComponent<TMP_Text>().material;
+                        panelAnimator.transform.GetChild(3).GetChild(1).GetComponent<TMP_Text>().color = new Color(1, 0.3444f, 0, 1);
+                        if (!PlaceLung.emergencyPowerRequires || PlaceLung.lungPlaced)
+                        {
+                            if (Plugin.setKorean)
+                            {
+                                panelAnimator.transform.GetChild(3).GetChild(1).GetComponent<TMP_Text>().text = "대기 중";
+                            }
+                            else
+                            {
+                                panelAnimator.transform.GetChild(3).GetChild(1).GetComponent<TMP_Text>().text = "Idle";
+                            }
+                        }else if (PlaceLung.emergencyPowerRequires && !PlaceLung.lungPlaced)
+                        {
+                            if (Plugin.setKorean)
+                            {
+                                panelAnimator.transform.GetChild(3).GetChild(1).GetComponent<TMP_Text>().text = "전력 없음";
+                            }
+                            else
+                            {
+                                panelAnimator.transform.GetChild(3).GetChild(1).GetComponent<TMP_Text>().text = "No Power";
+                            }
+                        }
+                        panelAnimators.Add(panelAnimator);
+                    }
+                }
 
-        void ElevatorUp()
+                foreach (Animator animator in animators)
+                {
+                    if (animator.gameObject.name == "ButtonLights")
+                    {
+                        buttonLightAnimators.Add(animator);
+                    }
+                }
+                GameObject.Find("InsideCollider").gameObject.AddComponent<ElevatorCollider>();
+                //GameObject.Find("OutOfBoundsTriggerFactory").transform.position = new Vector3(0, -800f, 0);
+
+                GameObject.Find("ElevatorMusic").AddComponent<ElevatorMusic>();
+                ScanNodeProperties[] scanNodeProperties = GameObject.FindObjectsOfType<ScanNodeProperties>();
+                if (Plugin.setKorean)
+                {
+                    foreach (ScanNodeProperties scanNodeProperty in scanNodeProperties)
+                    {
+                        if (scanNodeProperty.headerText == "Elevator Controller")
+                        {
+                            scanNodeProperty.headerText = "엘리베이터 제어기";
+                        }
+                        if (scanNodeProperty.headerText == "Auxiliary power unit")
+                        {
+                            scanNodeProperty.headerText = "보조 동력 장치";
+                            scanNodeProperty.subText = "긴급 전력 공급기";
+                        }
+                    }
+                }
+
+                if (GameNetworkManager.Instance.isHostingGame)
+                {
+                    GameObject socketInteractObject = GameObject.Instantiate(Plugin.socketInteractPrefab);
+                    socketInteractObject.GetComponent<NetworkObject>().Spawn();
+                }
+
+                isSetupEnd = true;
+                isElevatorClosed.Value = false;
+            }
+        }
+        public void ElevatorUpTrigger(PlayerControllerB playerController)
         {
             Plugin.mls.LogInfo("pressed up button!");
             if (isElevatorDowned.Value && animator.GetCurrentAnimatorStateInfo(0).normalizedTime >= 1.0f)
             {
                 foreach (Animator panelAnimator in panelAnimators)
                 {
-                    if (panelAnimator.gameObject.name == "ElevatorPanel")
+                    if (!PlaceLung.emergencyPowerRequires || PlaceLung.lungPlaced)
                     {
-                        panelAnimator.transform.GetChild(3).GetChild(1).GetComponent<TMP_Text>().text = "Moving Up";
+                        if (Plugin.setKorean)
+                        {
+                            panelAnimator.transform.GetChild(3).GetChild(1).GetComponent<TMP_Text>().text = "상승 중";
+                        }
+                        else
+                        {
+                            panelAnimator.transform.GetChild(3).GetChild(1).GetComponent<TMP_Text>().text = "Ascending";
+                        }
+                    }
+                    else if (PlaceLung.emergencyPowerRequires && !PlaceLung.lungPlaced)
+                    {
+                        if (Plugin.setKorean)
+                        {
+                            panelAnimator.transform.GetChild(3).GetChild(1).GetComponent<TMP_Text>().text = "전력 없음";
+                        }
+                        else
+                        {
+                            panelAnimator.transform.GetChild(3).GetChild(1).GetComponent<TMP_Text>().text = "No Power";
+                        }
                     }
                 }
                 isElevatorDowned.Value = false;
             }
         }
 
-        void ElevatorDown()
+        public void ElevatorDownTrigger(PlayerControllerB playerController)
         {
             Plugin.mls.LogInfo("pressed down button!");
             if (!isElevatorDowned.Value && animator.GetCurrentAnimatorStateInfo(0).normalizedTime >= 1.0f)
             {
                 foreach (Animator panelAnimator in panelAnimators)
                 {
-                    if (panelAnimator.gameObject.name == "ElevatorPanel")
+                    if (!PlaceLung.emergencyPowerRequires || PlaceLung.lungPlaced)
                     {
-                        panelAnimator.transform.GetChild(3).GetChild(1).GetComponent<TMP_Text>().text = "Moving Down";
+                        if (Plugin.setKorean)
+                        {
+                            panelAnimator.transform.GetChild(3).GetChild(1).GetComponent<TMP_Text>().text = "하강 중";
+                        }else
+                        {
+                            panelAnimator.transform.GetChild(3).GetChild(1).GetComponent<TMP_Text>().text = "Descending";
+                        }
+                    }
+                    else if (PlaceLung.emergencyCheck)
+                    {
+                        if (Plugin.setKorean)
+                        {
+                            panelAnimator.transform.GetChild(3).GetChild(1).GetComponent<TMP_Text>().text = "긴급 하강 중";
+                        }
+                        else
+                        {
+                            panelAnimator.transform.GetChild(3).GetChild(1).GetComponent<TMP_Text>().text = "Emergency\nDescending";
+                        }
+                    }
+                    else if (PlaceLung.emergencyPowerRequires && !PlaceLung.lungPlaced)
+                    {
+                        if (Plugin.setKorean)
+                        {
+                            panelAnimator.transform.GetChild(3).GetChild(1).GetComponent<TMP_Text>().text = "전력 없음";
+                        }
+                        else
+                        {
+                            panelAnimator.transform.GetChild(3).GetChild(1).GetComponent<TMP_Text>().text = "No Power";
+                        }
                     }
                 }
                 isElevatorDowned.Value = true;

@@ -23,7 +23,7 @@ namespace LCOffice.Patches
         }
         bool IHittable.Hit(int force, Vector3 hitDirection, PlayerControllerB playerWhoHit, bool playHitSFX = false)
         {
-            if (shrimpAI.hungerValue < 60 && shrimpAI.scaredBackingAway <= 0)
+            if (ShrimpAI.hungerValue.Value < 55 && shrimpAI.scaredBackingAway <= 0)
             {
                 ShrimpAI.isHitted.Value = true;
             }

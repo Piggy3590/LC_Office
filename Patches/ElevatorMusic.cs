@@ -25,10 +25,6 @@ namespace LCOffice.Patches
         }
         void Update()
         {
-            if (!RoundMapSystem.Instance.isOffice)
-            {
-                return;
-            }
             if (!audioSource.isPlaying)
             {
                 musicPlayTimer += Time.deltaTime;

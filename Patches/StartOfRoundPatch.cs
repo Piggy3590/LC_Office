@@ -1,5 +1,6 @@
 ﻿using GameNetcodeStuff;
 using HarmonyLib;
+using LethalNetworkAPI;
 using System;
 using System.Collections.Generic;
 using System.Data.SqlTypes;
@@ -48,7 +49,21 @@ namespace LCOffice.Patches
                 GameObject.Destroy(GameObject.FindObjectOfType<ShrimpAI>().gameObject);
             }
 
+            PlaceLung.lungPlacedThisFrame.Value = false;
+            PlaceLung.placeLungNetwork.Value = false;
+
+            ElevatorSystem.isElevatorDowned.Value = false;
+            ElevatorSystem.isElevatorClosed.Value = false;
+            ElevatorSystem.spawnShrimpBool.Value = false;
+
+            RoundMapSystem.Instance.isDungeonOfficeChecked = false;
             RoundMapSystem.Instance.isChecked = false;
+
+            PlaceLung.lungPlacedThisFrame.Value = false;
+
+            PlaceLung.placeLungNetwork.Value = false;
+            PlaceLung.placedLung.Value = null;
+
         }
     }
 }

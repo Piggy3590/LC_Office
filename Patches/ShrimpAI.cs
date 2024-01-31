@@ -24,6 +24,13 @@ namespace LCOffice.Patches
         }
         public override void Start()
         {
+            KillingPlayerBool.Value = false ;
+            SelectNode.Value = 0;
+            shrimpVelocity.Value = 0;
+            hungerValue.Value = 0;
+            isHitted.Value = false;
+            networkTargetPlayer.Value = null;
+
             this.transform.GetChild(0).GetComponent<EnemyAICollisionDetect>().mainScript = this;
             enemyType = Plugin.shrimpEnemy;
             skinnedMeshRenderers = gameObject.GetComponentsInChildren<SkinnedMeshRenderer>();
@@ -34,22 +41,14 @@ namespace LCOffice.Patches
             RoundManager.Instance.numberOfEnemiesInScene++;
             allAINodes = GameObject.FindGameObjectsWithTag("AINode");
             path1 = new NavMeshPath();
-            openDoorSpeedMultiplier = enemyType.doorSpeedMultiplier;
 
-            if (base.IsOwner)
-            {
-                SyncPositionToClients();
-            }
-            else
-            {
-                SetClientCalculatingAI(false);
-            }
-
-            this.transform.GetChild(0).gameObject.AddComponent<ShrimpCollider>();
+            //this.transform.GetChild(0).gameObject.AddComponent<ShrimpCollider>();
 
             mouth = GameObject.Find("ShrimpMouth").transform;
             leftEye = GameObject.Find("ShrimpLeftEye").transform;
             rightEye = GameObject.Find("ShrimpRightEye").transform;
+
+            shrimpKillTrigger = GameObject.Find("ShrimpKillTrigger");
 
             creatureAnimator = this.transform.GetChild(0).GetChild(1).gameObject.GetComponent<Animator>();
 
@@ -69,7 +68,6 @@ namespace LCOffice.Patches
                 audio.outputAudioMixerGroup = GameObject.Find("StatusEffectAudio").GetComponent<AudioSource>().outputAudioMixerGroup;
             }
             lookTarget = GameObject.Find("Shrimp_Look_target").transform;
-            lookTargetOrigin = lookTarget.transform.localPosition;
             dogHead = GameObject.Find("ShrimpLookPoint").transform;
             bittenObjectHolder = GameObject.Find("BittenObjectHolder").transform;
 
@@ -77,11 +75,7 @@ namespace LCOffice.Patches
             scaleOfEyesNormally = leftEye.localScale;
             originalMouthScale = mouth.localScale;
 
-            enragedScream = Plugin.enragedScream;
-            dogSprint = Plugin.dogSprint;
-            bigGrowl = Plugin.bigGrowl;
-
-            voice2Audio.clip = dogSprint;
+            voice2Audio.clip = Plugin.dogSprint;
             voice2Audio.Play();
 
             creatureVoice = voice2Audio;
@@ -93,29 +87,22 @@ namespace LCOffice.Patches
             tempEnemyBehaviourStates.Add(followingPlayer);
             tempEnemyBehaviourStates.Add(enragedState);
             enemyBehaviourStates = tempEnemyBehaviourStates.ToArray();
-            allBoxCollider = GameObject.FindObjectsOfType<BoxCollider>();
+            //allBoxCollider = GameObject.FindObjectsOfType<BoxCollider>();
 
             spawnPosition = this.transform.position;
             roamMap = new AISearchRoutine();
+
+            ItemElevatorCheck[] itemElevatorCheck = GameObject.FindObjectsOfType<ItemElevatorCheck>();
+            foreach (ItemElevatorCheck item in itemElevatorCheck)
+            {
+                item.shrimpAI = this;
+            }
 
             //RoundManager.Instance.SpawnedEnemies.Add(this);
 
             if (Plugin.setKorean)
             {
                 this.transform.GetChild(1).GetComponent<ScanNodeProperties>().headerText = "쉬림프";
-            }
-
-            if (isHitted.Value)
-            {
-                StartCoroutine(stunnedTimer(this.targetPlayer));
-            }
-        }
-
-        public override void HitEnemy(int force, PlayerControllerB playerWhoHit = null, bool playHitSFX = false)
-        {
-            if (hungerValue < 60 && scaredBackingAway <= 0)
-            {
-                isHitted.Value = true;
             }
         }
 
@@ -137,9 +124,22 @@ namespace LCOffice.Patches
         {
             if (scaredBackingAway > 0)
             {
-                agent.SetDestination(ChooseFarthestNodeFromPosition(this.transform.position, true, 0, false).position);
+                if (agent.enabled && base.IsOwner)
+                {
+                    lookRig.weight = Mathf.Lerp(lookRig.weight, 0, Time.deltaTime);
+                    agent.SetDestination(ChooseFarthestNodeFromPosition(this.transform.position, true, 0, false).position);
+                }
                 creatureAnimator.SetFloat("walkSpeed", -3.5f);
                 scaredBackingAway -= Time.deltaTime;
+            }
+        }
+
+        public override void HitEnemy(int force = 1, PlayerControllerB playerWhoHit = null, bool playHitSFX = false)
+        {
+            base.HitEnemy(force, playerWhoHit, false);
+            if (hungerValue.Value < 60 && scaredBackingAway <= 0)
+            {
+                isHitted.Value = true;
             }
         }
 
@@ -181,10 +181,35 @@ namespace LCOffice.Patches
             {
                 CheckPlayer();
             }
+            if (networkTargetPlayer.Value != null)
+            {
+                foreach (GameObject player in StartOfRound.Instance.allPlayerObjects)
+                {
+                    float distance = Vector3.Distance(this.transform.position, player.transform.position);
+                    if (distance < Mathf.Infinity && distance > 80)
+                    {
+                        networkTargetPlayer.Value = null;
+                    }
+                }
+            }
             this.targetPlayer = networkTargetPlayer.Value;
             SetByHunger();
             EatItem();
             CheckTargetAvailable();
+            
+            if (isHitted.Value)
+            {
+                StartCoroutine(stunnedTimer(this.targetPlayer));
+            }
+
+            if (base.IsOwner)
+            {
+                this.SyncPositionToClients();
+            }
+            else
+            {
+                this.SetClientCalculatingAI(false);
+            }
 
             if (ateLung)
             {
@@ -198,12 +223,14 @@ namespace LCOffice.Patches
                 mainAudio.PlayOneShot(Plugin.dogSneeze);
                 isSatisfied = true;
 
-            }else if (isSatisfied)
+            }
+            if (isSatisfied && satisfyValue > 0)
             {
                 satisfyValue -= Time.deltaTime;
                 isSeenPlayer = false;
             }
-            else if (satisfyValue <= 0f && isSatisfied)
+            
+            if (satisfyValue <= 0f && isSatisfied)
             {
                 isSatisfied = false;
                 satisfyValue = 0;
@@ -237,12 +264,16 @@ namespace LCOffice.Patches
                     stuckDetectionTimer = 0;
                 }
             }
-            if (this.targetPlayer == null && !isNearestItem || isSatisfied)
+            if ((this.targetPlayer == null && !isNearestItem) || isSatisfied)
             {
+                lookRig.weight = Mathf.Lerp(lookRig.weight, 0, Time.deltaTime);
                 if (targetNode != null)
                 {
-                    agent.SetDestination(targetNode.position);
-                    if (agent.velocity.sqrMagnitude < 0.5f)
+                    if (agent.enabled && base.IsOwner)
+                    {
+                        agent.SetDestination(targetNode.position);
+                    }
+                    if (shrimpVelocity.Value < 0.5f)
                     {
                         stuckDetectionTimer += Time.deltaTime;
                     }else
@@ -275,19 +306,33 @@ namespace LCOffice.Patches
                 stuckDetectionTimer = 0;
             }
 
-            /*
-            if (GameNetworkManager.Instance.isHostingGame)
+            
+            if (base.IsOwner)
             {
+                networkPosition.Value = this.transform.position;
                 networkRotation.Value = this.transform.rotation.eulerAngles;
-            }else
+                shrimpVelocity.Value = agent.velocity.sqrMagnitude;
+            }
+            else
             {
-                if (CalculateRotationDifference(networkRotation.Value, this.transform.rotation.eulerAngles) > 15)
+                networkPosDistance = Vector3.Distance(this.transform.position, networkPosition.Value);
+                if (networkPosDistance > 3)
                 {
-                    StartCoroutine(SyncRotation());
-                    Plugin.mls.LogInfo("the difference in rotation of the shrimp is too large! Syncing... : " + CalculateRotationDifference(networkRotation.Value, this.transform.rotation.eulerAngles));
+                    this.transform.position = networkPosition.Value;
+                    Plugin.mls.LogWarning("Force the shrimp to change position.");
+                }else
+                {
+                    this.transform.position = Vector3.Lerp(this.transform.position, networkPosition.Value, Time.deltaTime * 10);
+                }
+                this.transform.rotation = Quaternion.Euler(Vector3.Lerp(this.transform.rotation.eulerAngles, networkRotation.Value, Time.deltaTime * 10));
+
+                if (networkPosDistance > 15)
+                {
+                    Plugin.mls.LogFatal("Shrimp spawned successfully, but its current position is VERY different from the network position. This error is usually caused by low network quality or high traffic on the server.");
+
                 }
             }
-            */
+
 
             if (this.targetPlayer != null)
             {
@@ -296,12 +341,12 @@ namespace LCOffice.Patches
 
             if (this.targetPlayer != null)
             {
-                if (hungerValue < 55)
+                if (hungerValue.Value < 55)
                 {
                     leftEye.localScale = Vector3.Lerp(leftEye.localScale, scaleOfEyesNormally, 20f * Time.deltaTime);
                     rightEye.localScale = Vector3.Lerp(rightEye.localScale, scaleOfEyesNormally, 20f * Time.deltaTime);
                 }
-                else if (hungerValue > 55)
+                else if (hungerValue.Value > 55)
                 {
                     leftEye.localScale = Vector3.Lerp(leftEye.localScale, scaleOfEyesNormally * 0.4f, 20f * Time.deltaTime);
                     rightEye.localScale = Vector3.Lerp(rightEye.localScale, scaleOfEyesNormally * 0.4f, 20f * Time.deltaTime);
@@ -331,7 +376,7 @@ namespace LCOffice.Patches
                 creatureAnimator.SetBool("Running", true);
                 agent.speed = Mathf.Lerp(agent.speed, 15f, Time.deltaTime * 2f);
                 agent.angularSpeed = 10000;
-                agent.acceleration = 15;
+                agent.acceleration = 50;
             }
 
             StunTest();
@@ -376,22 +421,22 @@ namespace LCOffice.Patches
             {
                 FindNearestItem();
             }
-            footStepTime += Time.deltaTime * agent.velocity.sqrMagnitude / 8f;
+            footStepTime += Time.deltaTime * shrimpVelocity.Value / 8f;
             if (footStepTime > 0.5)
             {
                 FootStepSound();
                 footStepTime = 0;
             }
-            creatureAnimator.SetFloat("walkSpeed", Mathf.Clamp(agent.velocity.sqrMagnitude / 5f, 0f, 3f));
-            creatureAnimator.SetFloat("runSpeed", Mathf.Clamp(agent.velocity.sqrMagnitude / 2.7f, 3f, 4f));
+            creatureAnimator.SetFloat("walkSpeed", Mathf.Clamp(shrimpVelocity.Value / 5f, 0f, 3f));
+            creatureAnimator.SetFloat("runSpeed", Mathf.Clamp(shrimpVelocity.Value / 2.7f, 3f, 4f));
 
-            if (isTargetAvailable && hungerValue < 66 && !isRunning)
+            if (targetPlayer != null)
             {
-                if (!isNearestItem)
+                if (!isNearestItem && scaredBackingAway <= 0)
                 {
-                    if (hungerValue > 55)
+                    if (hungerValue.Value > 55)
                     {
-                        lookRay = new Ray(dogHead.position, this.targetPlayer.lowerSpine.transform.position - dogHead.position);
+                        lookRay = new Ray(dogHead.position, this.targetPlayer.transform.position - dogHead.position);
                         lookTarget.position = Vector3.Lerp(lookTarget.position, lookRay.GetPoint(3f), 30f * Time.deltaTime);
                     }
                     else
@@ -400,7 +445,7 @@ namespace LCOffice.Patches
                     }
                 }
                 agent.autoBraking = true;
-                lookRig.weight = 0.5f;
+                lookRig.weight = Mathf.Lerp(lookRig.weight, 0.5f, Time.deltaTime);
                 dogRandomWalk = false;
                 if (!isSeenPlayer)
                 {
@@ -411,43 +456,56 @@ namespace LCOffice.Patches
             if (!isRunning && !isNearestItem)
             {
                 agent.stoppingDistance = 4.5f;
+                lookRig.weight = Mathf.Lerp(lookRig.weight, 0, Time.deltaTime);
             }
             else
             {
-                agent.stoppingDistance = 2f;
+                agent.stoppingDistance = 0.5f;
             }
+
+            if (isNearestItem)
+            {
+                //Plugin.mls.LogInfo("isNearestItem");
+            }
+            //Plugin.mls.LogInfo("CheckLineOfSightForPlayer(40f, 40, -1): " + CheckLineOfSightForPlayer(40f, 40, -1));
         }
 
         void SetByHunger()
         {
-            if (hungerValue < 66)
+            if (hungerValue.Value < 66)
             {
-                if (isSeenPlayer && !isTargetAvailable)
+                if (isSeenPlayer && !isTargetAvailable && base.IsOwner)
                 {
-                    hungerValue += Time.deltaTime * 0.6f;
+                    hungerValue.Value += Time.deltaTime * 0.09f;
                 }
-                else if (isSeenPlayer && isTargetAvailable)
+                else if (isSeenPlayer && isTargetAvailable && base.IsOwner)
                 {
-                    hungerValue += Time.deltaTime;
+                    hungerValue.Value += Time.deltaTime;
                 }
             }
-            if (hungerValue > 55 &&  hungerValue < 60)
+            if (hungerValue.Value > 55 &&  hungerValue.Value < 60)
             {
                 voiceAudio.pitch = Mathf.Lerp(voiceAudio.pitch, 1, 45f * Time.deltaTime);
-                voiceAudio.loop = true;
                 voiceAudio.volume = Mathf.Lerp(voiceAudio.volume, 1f, 125f * Time.deltaTime);
-                voiceAudio.clip = Plugin.stomachGrowl;
-                voiceAudio.Play();
-            }
-            else if (hungerValue < 63 && hungerValue > 60 && !isEnraging)
-            {
                 voiceAudio.loop = true;
+                voiceAudio.clip = Plugin.stomachGrowl;
+                if (!voiceAudio.isPlaying)
+                {
+                    voiceAudio.Play();
+                }
+            }
+            else if (hungerValue.Value < 63 && hungerValue.Value >= 60 && !isEnraging)
+            {
                 voiceAudio.pitch = Mathf.Lerp(voiceAudio.pitch, 0.8f, 45f * Time.deltaTime);
                 voiceAudio.volume = Mathf.Lerp(voiceAudio.volume, 1f, 125f * Time.deltaTime);
                 isEnraging = true;
-                voiceAudio.clip = bigGrowl;
+                voiceAudio.clip = Plugin.bigGrowl;
+                if (!voiceAudio.isPlaying)
+                {
+                    voiceAudio.Play();
+                }
             }
-            else if (hungerValue < 63 && hungerValue > 60 && isEnraging)
+            else if (hungerValue.Value < 63 && hungerValue.Value > 60 && isEnraging)
             {
                 voiceAudio.pitch = Mathf.Lerp(voiceAudio.pitch, 1f, 45f * Time.deltaTime);
                 voiceAudio.volume = Mathf.Lerp(voiceAudio.volume, 1f, 125f * Time.deltaTime);
@@ -456,32 +514,33 @@ namespace LCOffice.Patches
                     canBeMoved = false;
                 }
             }
-            else if (hungerValue < 55)
+            else if (hungerValue.Value < 55)
             {
                 voiceAudio.pitch = Mathf.Lerp(voiceAudio.pitch, 0f, 45f * Time.deltaTime);
                 voiceAudio.volume = Mathf.Lerp(voiceAudio.volume, 0f, 125f * Time.deltaTime);
             }
-            else if (hungerValue > 63 && !isAngered)
+            else if (hungerValue.Value > 63 && !isAngered)
             {
                 if (!isNearestItem && !isKillingPlayer && stunNormalizedTimer <= 0f)
                 {
                     canBeMoved = true;
                 }
-                voiceAudio.clip = enragedScream;
+                voiceAudio.clip = Plugin.enragedScream;
                 voiceAudio.Play();
                 isEnraging = false;
                 isAngered = true;
-            }else if (hungerValue > 66)
+            }else if (hungerValue.Value > 65)
             {
+                openDoorSpeedMultiplier = 1.5f;
                 isRunning = true;
                 voice2Audio.volume = Mathf.Lerp(voice2Audio.volume, 1f, 125f * Time.deltaTime);
             }
-            else if (hungerValue > 63)
+            else if (hungerValue.Value > 63)
             {
                 voiceAudio.pitch = Mathf.Lerp(voiceAudio.pitch, 0.8f, 45f * Time.deltaTime);
                 mouth.localScale = Vector3.Lerp(mouth.localScale, new Vector3(0.005590725f, 0.01034348f, 0.02495567f), 30f * Time.deltaTime);
             }
-            if (hungerValue < 60)
+            if (hungerValue.Value < 60)
             {
                 isEnraging = false;
                 isAngered = false;
@@ -490,24 +549,26 @@ namespace LCOffice.Patches
                     canBeMoved = true;
                 }
             }
-            if (hungerValue < 66)
+            if (hungerValue.Value < 66)
             {
                 isRunning = false;
+                openDoorSpeedMultiplier = 0.3f;
             }
 
-            if (hungerValue < 63)
+            if (hungerValue.Value < 63)
             {
                 mouth.localScale = Vector3.Lerp(mouth.localScale, originalMouthScale, 20f * Time.deltaTime);
                 voice2Audio.volume = Mathf.Lerp(voice2Audio.volume, 0f, 125f * Time.deltaTime);
                 isRunning = false;
             }
-            if (hungerValue > 64 && networkTargetPlayerDistance < 3.5f && !isKillingPlayer && this.targetPlayer != null)
+            if (hungerValue.Value > 64 && networkTargetPlayerDistance < 3.5f && !isKillingPlayer && this.targetPlayer != null)
             {
                 if (!this.targetPlayer.isCameraDisabled)
                 {
                     KillingPlayerBool.Value = true;
                 }
             }
+
             if (KillingPlayerBool.Value)
             {
                 if (!this.targetPlayer.isCameraDisabled)
@@ -534,7 +595,7 @@ namespace LCOffice.Patches
             {
                 if (isNearestItem && !nearestDroppedItem.GetComponent<GrabbableObject>().isHeld)
                 {
-                    if (hungerValue < 55)
+                    if (hungerValue.Value < 55)
                     {
                         lookRay = new Ray(dogHead.position, nearestDroppedItem.transform.position - dogHead.position);
                         lookTarget.position = Vector3.Lerp(lookTarget.position, lookRay.GetPoint(1.8f), 6f * Time.deltaTime);
@@ -543,16 +604,23 @@ namespace LCOffice.Patches
                     {
                         lookTarget.position = Vector3.Lerp(this.lookTarget.position, nearestDroppedItem.transform.position, 6f * Time.deltaTime);
                     }
-                    agent.SetDestination(nearestDroppedItem.transform.position);
+                    if (agent.enabled && base.IsOwner)
+                    {
+                        agent.SetDestination(nearestDroppedItem.transform.position);
+                    }
                     nearestItemDistance = Vector3.Distance(this.transform.position, nearestDroppedItem.transform.position);
                     if (nearestItemDistance < 1.35f)
                     {
                         canBeMoved = false;
                         isRunning = false;
+                        nearestDroppedItem.transform.SetParent(this.transform, true);
                         if (nearestDroppedItem.GetComponent<LungProp>() != null)
                         {
                             satisfyValue += 30;
-                            hungerValue -= 50;
+                            if (base.IsOwner)
+                            {
+                                hungerValue.Value -= 50;
+                            }
                             ateLung = true;
                             nearestDroppedItem.GetComponentInChildren<Light>().enabled = false;
                         }else if (nearestDroppedItem.GetComponent<StunGrenadeItem>() != null)
@@ -568,12 +636,18 @@ namespace LCOffice.Patches
                         if (nearestDroppedItem.GetComponent<GrabbableObject>().itemProperties.weight > 1)
                         {
                             satisfyValue += (Mathf.Clamp(nearestDroppedItem.GetComponent<GrabbableObject>().itemProperties.weight - 1f, 0f, 100f) * 70f);
-                            hungerValue -= Mathf.Clamp(nearestDroppedItem.GetComponent<GrabbableObject>().itemProperties.weight - 1f, 0f, 100f) * 210f;
+                            if (base.IsOwner)
+                            {
+                                hungerValue.Value -= Mathf.Clamp(nearestDroppedItem.GetComponent<GrabbableObject>().itemProperties.weight - 1f, 0f, 100f) * 210f;
+                            }
                         }
                         else
                         {
                             satisfyValue += 6;
-                            hungerValue -= 12;
+                            if (base.IsOwner)
+                            {
+                                hungerValue.Value -= 12;
+                            }
                         }
                         GrabbableObject item = nearestDroppedItem.GetComponent<GrabbableObject>();
                         item.grabbable = false;
@@ -603,6 +677,11 @@ namespace LCOffice.Patches
                             canBeMoved = true;
                         }
                     }
+                }else if (targetPlayer != null && !isSatisfied)
+                {
+                    nearestDroppedItem = null;
+                    nearestItemDistance = 3000;
+                    isNearestItem = false;
                 }
             }
             if (stunNormalizedTimer > 0f)
@@ -617,34 +696,41 @@ namespace LCOffice.Patches
 
         void CheckTargetAvailable()
         {
-            if (isTargetAvailable && !isNearestItem && !isKillingPlayer && scaredBackingAway <= 0 && stunNormalizedTimer <= 0f)
+            if ((networkTargetPlayerDistance < 8 || !CheckLineOfSightForPlayer(40f, 40, -1)) && !isNearestItem && !isKillingPlayer && scaredBackingAway <= 0 && stunNormalizedTimer <= 0f)
             {
-                followTimer = 10;
+                followTimer = 5;
                 canBeMoved = true;
             }
 
-            if (isTargetAvailable && this.targetPlayer != null)
+            if (targetPlayer != null)
             {
-                networkTargetPlayerDistance = Vector3.Distance(this.transform.position, this.targetPlayer.transform.position);
+                networkTargetPlayerDistance = Vector3.Distance(this.transform.position, targetPlayer.transform.position);
             }
             else
             {
                 networkTargetPlayerDistance = 3000;
             }
 
-            if ((followTimer > 0 || networkTargetPlayerDistance < 8f) && !isSatisfied)
+            if ((followTimer > 0 || networkTargetPlayerDistance < 10f) && !isSatisfied)
             {
-                if (isTargetAvailable && scaredBackingAway <= 0 && !isNearestItem)
+                if (isTargetAvailable && scaredBackingAway <= 0 && !isNearestItem && agent.enabled && base.IsOwner)
                 {
                     agent.SetDestination(targetPlayer.transform.position);
                 }
                 if (nearestDroppedItem != null && nearestDroppedItem.GetComponent<GrabbableObject>().isHeld)
                 {
                     nearestDroppedItem.GetComponent<ItemElevatorCheck>().dogEatTimer = 5;
-                    agent.SetDestination(targetPlayer.transform.position);
+                    droppedItems.Remove(nearestDroppedItem);
+                    if (agent.enabled && base.IsOwner)
+                    {
+                        agent.SetDestination(targetPlayer.transform.position);
+                    }
+                    nearestDroppedItem = null;
+                    nearestItemDistance = 3000;
+                    isNearestItem = false;
                 }
             }
-            if (this.targetPlayer != null && followTimer > 0 && networkTargetPlayerDistance > 8f)
+            if (((targetPlayer != null && networkTargetPlayerDistance > 10f) || !CheckLineOfSightForPlayer(40f, 40, -1)) && followTimer > 0)
             {
                 followTimer -= Time.deltaTime;
             }
@@ -696,9 +782,20 @@ namespace LCOffice.Patches
             yield break;
         }
 
+        void KillPlayerTrigger(PlayerControllerB killPlayer)
+        {
+            if (!killPlayer.isCameraDisabled)
+            {
+                StartCoroutine(KillPlayer(killPlayer));
+            }else
+            {
+                StartCoroutine(KillPlayerInOtherClient(killPlayer));
+            }
+        }
+
         IEnumerator KillPlayer(PlayerControllerB killPlayer)
         {
-            hungerValue = 0;
+            hungerValue.Value = 0;
             Plugin.mls.LogInfo("Shrimp: Killing " + killPlayer.name + "!");
             yield return new WaitForSeconds(0.05f);
             isKillingPlayer = true;
@@ -708,7 +805,7 @@ namespace LCOffice.Patches
             {
                 killPlayer.KillPlayer(Vector3.zero, true, CauseOfDeath.Mauling, 0);
             }
-            yield return new WaitForSeconds(0.5f);
+            yield return new WaitForSeconds(0.1f);
             if (killPlayer.deadBody == null)
             {
                 Debug.Log("Shrimp: Player body was not spawned or found within 0.5 seconds.");
@@ -718,7 +815,7 @@ namespace LCOffice.Patches
                 yield break;
             }
             TakeBodyInMouth(killPlayer.deadBody);
-            yield return new WaitForSeconds(4f);
+            yield return new WaitForSeconds(4.4f);
             creatureAnimator.SetTrigger("eat");
             mainAudio.PlayOneShot(Plugin.dogEatItem);
             killPlayer.deadBody.gameObject.SetActive(false);
@@ -730,12 +827,12 @@ namespace LCOffice.Patches
         IEnumerator KillPlayerInOtherClient(PlayerControllerB killPlayer)
         {
             Plugin.mls.LogInfo("Shrimp: Killing " + killPlayer.name + "!");
-            hungerValue = 0;
+            hungerValue.Value = 0;
             yield return new WaitForSeconds(0.05f);
             isKillingPlayer = true;
             creatureAnimator.SetTrigger("RipObject");
             mainAudio.PlayOneShot(Plugin.ripPlayerApart);
-            yield return new WaitForSeconds(0.5f);
+            yield return new WaitForSeconds(0.1f);
             if (killPlayer.deadBody == null)
             {
                 Debug.Log("Shrimp: Player body was not spawned or found within 0.5 seconds.");
@@ -745,7 +842,7 @@ namespace LCOffice.Patches
                 yield break;
             }
             TakeBodyInMouth(killPlayer.deadBody);
-            yield return new WaitForSeconds(4f);
+            yield return new WaitForSeconds(4.4f);
             creatureAnimator.SetTrigger("eat");
             mainAudio.PlayOneShot(Plugin.dogEatItem);
             killPlayer.deadBody.gameObject.SetActive(false);
@@ -772,6 +869,7 @@ namespace LCOffice.Patches
             enragedState.name = "Enraged";
             enragedState.boolValue = true;
         }
+        public float networkPosDistance;
 
         public Vector3 prevPosition;
         public float stuckDetectionTimer;
@@ -784,6 +882,8 @@ namespace LCOffice.Patches
 
         public static LethalNetworkVariable<bool> KillingPlayerBool = new LethalNetworkVariable<bool>(identifier: "KillingPlayerBool");
         public static LethalNetworkVariable<int> SelectNode = new LethalNetworkVariable<int>(identifier: "SelectNode");
+        public static LethalNetworkVariable<float> shrimpVelocity = new LethalNetworkVariable<float>(identifier: "shrimpVelocity");
+        public static LethalNetworkVariable<float> hungerValue = new LethalNetworkVariable<float>(identifier: "hungerValue");
         //public LethalClientMessage<bool> KillingPlayer = new("KillingPlayer", onReceived: KillPlayerSync);
 
         public static LethalNetworkVariable<bool> isHitted = new LethalNetworkVariable<bool>(identifier: "isHitted");
@@ -792,14 +892,9 @@ namespace LCOffice.Patches
         public static LethalNetworkVariable<PlayerControllerB> networkTargetPlayer = new LethalNetworkVariable<PlayerControllerB>(identifier: "networkTargetPlayer");
         public bool isKillingPlayer;
 
-        public AudioClip bigGrowl;
-        public AudioClip enragedScream;
-        public AudioClip dogSprint;
-
         public bool isSeenPlayer;
         public bool isEnraging;
         public bool isAngered;
-        public float hungerValue;
 
         public bool canBeMoved;
         public bool isRunning;
@@ -819,7 +914,6 @@ namespace LCOffice.Patches
         public Transform dogHead;
         public Ray lookRay;
         public Transform lookTarget;
-        public Vector3 lookTargetOrigin;
 
         public BoxCollider[] allBoxCollider;
         public Transform IdleTarget;
@@ -844,6 +938,8 @@ namespace LCOffice.Patches
         public Transform rightEye;
         public Transform shrimpEye;
         public Transform mouth;
+
+        public GameObject shrimpKillTrigger;
 
         public Transform bittenObjectHolder;
         public float searchingForObjectTimer;

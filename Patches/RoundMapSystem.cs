@@ -1,6 +1,9 @@
-﻿using GameNetcodeStuff;
+﻿using DunGen;
+using DunGen.Adapters;
+using GameNetcodeStuff;
 using HarmonyLib;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -15,6 +18,7 @@ namespace LCOffice.Patches
         public static RoundMapSystem Instance { get; private set; }
         public bool isOffice;
         public bool isChecked;
+        public bool isDungeonOfficeChecked;
 
         private void Awake()
         {
@@ -31,14 +35,23 @@ namespace LCOffice.Patches
         {
             if (!this.isChecked && !StartOfRound.Instance.inShipPhase)
             {
-                if (GameObject.Find("StartRoomElevator") != null)
+                if ((GameObject.Find("IndustrialFan") == null && GameObject.Find("ManorStartRoom") == null))
+                {
+                    return;
+                }
+                if (GameObject.Find("IndustrialFan") != null && GameObject.Find("StartRoomElevator") != null)
                 {
                     isOffice = true;
                 }
                 else
                 {
-                    this.isOffice = false;
+                    isOffice = false;
                 }
+                if (!isDungeonOfficeChecked)
+                {
+                    StartCoroutine(CheckOfficeElevator());
+                }
+                /*
                 if (this.isOffice)
                 {
                     if (GameObject.Find("Stanley") != null)
@@ -49,8 +62,16 @@ namespace LCOffice.Patches
                         }
                     }
                 }
-                this.isChecked = true;
+                */
+                isDungeonOfficeChecked = true;
             }
+        }
+        IEnumerator CheckOfficeElevator()
+        {
+            yield return new WaitForSeconds(5f);
+            isChecked = true;
+            yield break;
         }
     }
 }
+

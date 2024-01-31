@@ -24,14 +24,14 @@ namespace LCOffice.Patches
         void Start()
         {
             grabbableObject = this.GetComponent<GrabbableObject>();
+            if (GameObject.Find("TheDog") != null)
+            {
+                shrimpAI = GameObject.FindObjectOfType<ShrimpAI>();
+            }
         }
 
         void LateUpdate()
         {
-            if (GameObject.Find("TheDog") != null && shrimpAI == null)
-            {
-                shrimpAI = GameObject.FindObjectOfType<ShrimpAI>();
-            }
             if (!isAppendedToArray && !StartOfRound.Instance.inShipPhase)
             {
                 if (RoundMapSystem.Instance.isOffice)
@@ -64,12 +64,12 @@ namespace LCOffice.Patches
                         shrimpAI.droppedItems.Add(this.gameObject);
                     }
                     dogEatTimer += Time.deltaTime;
-                    if (dogEatTimer > 2f)
-                    {
-                        shrimpAI.droppedItems.Remove(this.gameObject);
-                        droppedItemMoment = false;
-                        dogEatTimer += 0;
-                    }
+                }
+                if (dogEatTimer > 1.5f)
+                {
+                    shrimpAI.droppedItems.Remove(this.gameObject);
+                    droppedItemMoment = false;
+                    dogEatTimer = 0;
                 }
             }
         }

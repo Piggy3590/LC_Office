@@ -13,10 +13,12 @@ namespace LCOffice.Patches
 {
     public class ElevatorCollider : NetworkBehaviour
     {
-        public Bounds checkBounds; // 검사할 구역의 Bounds
+        public Bounds checkBounds;
 
         public LethalClientMessage<bool> SendInElevator = new LethalClientMessage<bool>("SendInElevator", onReceivedFromClient:IsInElevatorSync);
         public List<GameObject> allPlayerColliders = new List<GameObject>();
+        public Transform storageParent;
+        public Transform lungPlacement;
 
         public Vector3 tempTargetFloorPosition;
         public Vector3 tempStartFallingPosition;
@@ -27,6 +29,7 @@ namespace LCOffice.Patches
         {
             if (value)
             {
+                id.GetPlayerController().GetComponent<PlayerElevatorCheck>().wasInElevator = true;
                 id.GetPlayerController().GetComponent<PlayerElevatorCheck>().isInElevatorNotOwner = true;
             }
             else
@@ -42,6 +45,7 @@ namespace LCOffice.Patches
             {
                 allPlayerColliders.Add(player);
             }
+            lungPlacement = GameObject.FindObjectOfType<PlaceLung>().transform;
         }
 
         private void Update()
@@ -67,6 +71,7 @@ namespace LCOffice.Patches
                             {
                                 collider.transform.SetParent(this.transform.parent);
                                 SendInElevator.SendAllClients(true);
+                                playerElevatorCheck.wasInElevator = true;
                                 playerElevatorCheck.isInElevatorB = true;
                             }
                         }else if (collider.gameObject.tag == "PhysicsProp")
@@ -81,10 +86,13 @@ namespace LCOffice.Patches
                             }
                             if (!collider.GetComponent<ItemElevatorCheck>().isInElevatorB)
                             {
-                                collider.transform.parent = this.transform.parent;
-                                collider.GetComponent<GrabbableObject>().targetFloorPosition = tempTargetFloorPosition;
-                                collider.GetComponent<GrabbableObject>().startFallingPosition = tempStartFallingPosition;
-                                collider.GetComponent<ItemElevatorCheck>().isInElevatorB = true;
+                                if (collider.transform.parent != storageParent || collider.transform.parent != lungPlacement)
+                                {
+                                    collider.transform.parent = this.transform.parent;
+                                    collider.GetComponent<GrabbableObject>().targetFloorPosition = tempTargetFloorPosition;
+                                    collider.GetComponent<GrabbableObject>().startFallingPosition = tempStartFallingPosition;
+                                    collider.GetComponent<ItemElevatorCheck>().isInElevatorB = true;
+                                }
                             }
                         }
                     }
@@ -94,7 +102,7 @@ namespace LCOffice.Patches
                         {
                             if (collider.GetComponent<PlayerElevatorCheck>().isInElevatorB)
                             {
-                                collider.transform.SetParent(null, true);
+                                collider.transform.SetParent(StartOfRound.Instance.playersContainer, true);
                                 SendInElevator.SendAllClients(false);
                                 collider.GetComponent<PlayerElevatorCheck>().isInElevatorB = false;
                             }else if (collider.GetComponent<PlayerElevatorCheck>().isInElevatorB
@@ -115,7 +123,9 @@ namespace LCOffice.Patches
                                 Plugin.mls.LogInfo(playerController.actualClientId + " is inside of elevator check!");
                                 collider.transform.SetParent(this.transform.parent, true);
                                 playerElevatorCheck.isInElevatorB = true;
-                            }else if (playerElevatorCheck.isInElevatorB && playerController.isCameraDisabled && !playerElevatorCheck.isInElevatorNotOwner)
+                                playerElevatorCheck.wasInElevator = true;
+                            }
+                            else if (playerElevatorCheck.isInElevatorB && playerController.isCameraDisabled && !playerElevatorCheck.isInElevatorNotOwner)
                             {
                                 Plugin.mls.LogInfo(playerController.actualClientId + " is outside of elevator check!");
                                 collider.transform.SetParent(null, true);

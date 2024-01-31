@@ -10,11 +10,9 @@ using UnityEngine.InputSystem;
 using Unity.Netcode;
 using UnityEngine.Rendering;
 using Dissonance;
-using System.Collections.Generic;
 using System.Security.Permissions;
 using UnityEngine.AI;
 
-[assembly: SecurityPermission(SecurityAction.RequestMinimum, SkipVerification = true)]
 
 namespace LCOffice.Patches
 {
@@ -24,6 +22,7 @@ namespace LCOffice.Patches
         public ElevatorCollider elevatorCollider;
 
         public bool isInElevatorNotOwner;
+        public bool wasInElevator;
 
         public PlayerControllerB playerControllerB;
 
@@ -32,6 +31,19 @@ namespace LCOffice.Patches
         void Start()
         {
             playerControllerB = this.GetComponent<PlayerControllerB>();
+        }
+
+        void Update()
+        {
+            if (StartOfRound.Instance.shipIsLeaving && wasInElevator)
+            {
+                Plugin.mls.LogInfo("Parenting Player: " + this.gameObject.name);
+                if (this.transform.parent != playerControllerB.playersManager.elevatorTransform && this.transform.parent != playerControllerB.playersManager.playersContainer)
+                {
+                    this.transform.SetParent(playerControllerB.playersManager.playersContainer);
+                }
+                wasInElevator = false;
+            }
         }
     }
 }
