@@ -4,7 +4,7 @@
 
 Bugs currently being fixed:
 
-A bug that causes an error and extremely severe frame drops when a shrimp is found. In the current version, it is recommended to disable shrimp spawning.
+ - A bug that causes an error and extremely severe frame drops when a shrimp is found. In the current version, it is recommended to disable shrimp spawning.
 
 A bug where the Apparatus mounted on the elevator was invisible to other players.
 
