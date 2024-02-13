@@ -1,5 +1,15 @@
 # LC_Office
 
+# Please read before reporting an issue
+
+Bugs currently being fixed:
+
+A bug that causes an error and extremely severe frame drops when a shrimp is found. In the current version, it is recommended to disable shrimp spawning.
+
+A bug where the Apparatus mounted on the elevator was invisible to other players.
+
+Elevator desync issue (not sure if this will be fixed).
+
 ![Preview2](https://i.imgur.com/qRbVe3l.png)
 
 ![Preview1](https://i.imgur.com/F2CT8C8.png)
