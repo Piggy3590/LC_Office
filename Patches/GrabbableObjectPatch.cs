@@ -13,10 +13,13 @@ namespace LCOffice.Patches
     internal class GrabbableObjectPatch
     {
         [HarmonyPrefix]
-        [HarmonyPatch("Start")]
-        private static void Start_Prefix(GrabbableObject __instance)
+        [HarmonyPatch("Update")]
+        private static void Update_Prefix(GrabbableObject __instance)
         {
-            __instance.gameObject.AddComponent<ItemElevatorCheck>();
+            if (__instance.gameObject.GetComponent<ItemElevatorCheck>() == null)
+            {
+                __instance.gameObject.AddComponent<ItemElevatorCheck>();
+            }
         }
     }
 }

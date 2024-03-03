@@ -21,6 +21,10 @@ namespace LCOffice.Patches
 {
     public class PlaceLung : NetworkBehaviour
     {
+        public static bool emergencyPowerRequires;
+        public static bool emergencyCheck;
+        public static bool lungPlaced;
+        /*
         public static LethalClientEvent lungPlacedFrameNetwork = new LethalClientEvent(identifier: "LungPlaced", onReceivedFromClient: ReceivedPlacedFrameNetwork);
         public static bool lungPlacedThisFrame;
         public static bool placeLungNetwork;
@@ -33,10 +37,7 @@ namespace LCOffice.Patches
 
         public static bool isPlaceCalled;
 
-        public static bool lungPlaced;
         public static bool lungPlacedLocalFrame;
-        public static bool emergencyPowerRequires;
-        public static bool emergencyCheck;
         public static NetworkObject networkObject;
 
         public static bool isSetupEnd;
@@ -74,7 +75,6 @@ namespace LCOffice.Patches
         {
             lungPlacedThisFrame = true;
         }
-
         void Start()
         {
             lungPlacedThisFrame = false;
@@ -234,7 +234,6 @@ namespace LCOffice.Patches
                 PlaceLung.placedLung.Value = null;
             }
         }
-
         [HarmonyPatch(typeof(LungProp))]
         [HarmonyPrefix]
         [HarmonyPatch("Start")]
@@ -270,5 +269,6 @@ namespace LCOffice.Patches
                 }
             }
         }
+        */
     }
 }

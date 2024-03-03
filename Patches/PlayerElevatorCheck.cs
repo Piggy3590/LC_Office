@@ -35,9 +35,9 @@ namespace LCOffice.Patches
 
         void Update()
         {
-            if (StartOfRound.Instance.shipIsLeaving && wasInElevator)
+            if (StartOfRound.Instance.shipIsLeaving)
             {
-                if (this.transform.parent != playerControllerB.playersManager.elevatorTransform && this.transform.parent != playerControllerB.playersManager.playersContainer)
+                if (this.transform.parent == elevatorCollider)
                 {
                     this.transform.SetParent(playerControllerB.playersManager.playersContainer);
                 }

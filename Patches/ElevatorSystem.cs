@@ -31,9 +31,11 @@ namespace LCOffice.Patches
         public static LethalNetworkVariable<bool> spawnShrimpBool = new LethalNetworkVariable<bool>(identifier: "spawnShrimpBool");
 
         public static LethalClientEvent ElevatorUpTriggerEvent = new LethalClientEvent(identifier: "elevatorUpTriggerEvent", onReceivedFromClient: ElevatorTriggerUp);
+        public static LethalClientEvent ElevatorMidTriggerEvent = new LethalClientEvent(identifier: "elevatorMidTriggerEvent", onReceivedFromClient: ElevatorTriggerMid);
         public static LethalClientEvent ElevatorDownTriggerEvent = new LethalClientEvent(identifier: "elevatorDownTriggerEvent", onReceivedFromClient: ElevatorTriggerDown);
 
         public static List<InteractTrigger> upButtons = new List<InteractTrigger>();
+        public static List<InteractTrigger> midButtons = new List<InteractTrigger>();
         public static List<InteractTrigger> downButtons = new List<InteractTrigger>();
 
         public static Animator doorAnimator;
@@ -132,8 +134,9 @@ namespace LCOffice.Patches
                     }
                     if (elevatorTimer > 3f)
                     {
-                        if (animator.GetInteger("floor") == 2)
+                        if (elevatorFloor.Value == 1)
                         {
+                            Plugin.mls.LogInfo("Elevator down to 2f");
                             animator.SetInteger("floor", 1);
                             foreach (Animator buttonLightAnimator in buttonLightAnimators)
                             {
@@ -141,6 +144,7 @@ namespace LCOffice.Patches
                             }
                         }else
                         {
+                            Plugin.mls.LogInfo("Elevator down to 1f");
                             animator.SetInteger("floor", 0);
                             foreach (Animator buttonLightAnimator in buttonLightAnimators)
                             {
@@ -165,8 +169,9 @@ namespace LCOffice.Patches
                     isElevatorClosed = true;
                     if (elevatorTimer > 3f)
                     {
-                        if (animator.GetInteger("floor") == 0)
+                        if (elevatorFloor.Value == 1)
                         {
+                            Plugin.mls.LogInfo("Elevator up to 2f");
                             animator.SetInteger("floor", 1);
                             foreach (Animator buttonLightAnimator in buttonLightAnimators)
                             {
@@ -175,6 +180,7 @@ namespace LCOffice.Patches
                         }
                         else
                         {
+                            Plugin.mls.LogInfo("Elevator up to 3f");
                             animator.SetInteger("floor", 2);
                             foreach (Animator buttonLightAnimator in buttonLightAnimators)
                             {
@@ -193,14 +199,14 @@ namespace LCOffice.Patches
                 panelAnimators.RemoveAll((Animator item) => item == null || !item.gameObject.activeInHierarchy);
                 foreach (Animator panelAnimator in panelAnimators)
                 {
-                    if (panelAnimator.transform.GetChild(3).GetChild(1).GetComponent<TMP_Text>() != null)
+                    if (panelAnimator.transform.GetChild(4).GetChild(1).GetComponent<TMP_Text>() != null)
                     {
                         if (Plugin.setKorean)
                         {
-                            panelAnimator.transform.GetChild(3).GetChild(1).GetComponent<TMP_Text>().text = "대기 중";
+                            panelAnimator.transform.GetChild(4).GetChild(1).GetComponent<TMP_Text>().text = "대기 중";
                         }else
                         {
-                            panelAnimator.transform.GetChild(3).GetChild(1).GetComponent<TMP_Text>().text = "Idle";
+                            panelAnimator.transform.GetChild(4).GetChild(1).GetComponent<TMP_Text>().text = "Idle";
                         }
                     }
                 }
@@ -213,22 +219,33 @@ namespace LCOffice.Patches
 
             foreach (InteractTrigger upButton in upButtons)
             {
-                if (!upButton.interactable && ElevatorSystem.animator.GetCurrentAnimatorStateInfo(0).normalizedTime > 1.2f)
+                if (!upButton.interactable && ElevatorSystem.animator.GetCurrentAnimatorStateInfo(0).normalizedTime > 1.2f && doorAnimator.GetBool("closed"))
                 {
                     upButton.interactable = true;
                 }
-                else if (upButton.interactable && ElevatorSystem.animator.GetCurrentAnimatorStateInfo(0).normalizedTime < 1.2f)
+                else if (upButton.interactable && ElevatorSystem.animator.GetCurrentAnimatorStateInfo(0).normalizedTime < 1.2f && !doorAnimator.GetBool("closed"))
                 {
                     upButton.interactable = false;
                 }
             }
+            foreach (InteractTrigger midButton in midButtons)
+            {
+                if (!midButton.interactable && ElevatorSystem.animator.GetCurrentAnimatorStateInfo(0).normalizedTime > 1.2f && doorAnimator.GetBool("closed"))
+                {
+                    midButton.interactable = true;
+                }
+                else if (midButton.interactable && ElevatorSystem.animator.GetCurrentAnimatorStateInfo(0).normalizedTime < 1.2f && !doorAnimator.GetBool("closed"))
+                {
+                    midButton.interactable = false;
+                }
+            }
             foreach (InteractTrigger downButton in downButtons)
             {
-                if (!downButton.interactable && ElevatorSystem.animator.GetCurrentAnimatorStateInfo(0).normalizedTime > 1.2f)
+                if (!downButton.interactable && ElevatorSystem.animator.GetCurrentAnimatorStateInfo(0).normalizedTime > 1.2f && doorAnimator.GetBool("closed"))
                 {
                     downButton.interactable = true;
                 }
-                else if (downButton.interactable && ElevatorSystem.animator.GetCurrentAnimatorStateInfo(0).normalizedTime < 1.2f)
+                else if (downButton.interactable && ElevatorSystem.animator.GetCurrentAnimatorStateInfo(0).normalizedTime < 1.2f && !doorAnimator.GetBool("closed"))
                 {
                     downButton.interactable = false;
                 }
@@ -250,35 +267,37 @@ namespace LCOffice.Patches
                     if (panelAnimator.gameObject.name == "ElevatorPanel")
                     {
                         panelAnimator.transform.GetChild(1).GetChild(0).GetComponent<InteractTrigger>().onInteract.AddListener(ElevatorUpEvent);
-                        panelAnimator.transform.GetChild(2).GetChild(0).GetComponent<InteractTrigger>().onInteract.AddListener(ElevatorDownEvent);
-                        panelAnimator.transform.GetChild(3).GetChild(1).GetComponent<TMP_Text>();
-                        panelAnimator.transform.GetChild(3).GetChild(1).GetComponent<TMP_Text>().font = GameObject.Find("doorHydraulics").GetComponent<TMP_Text>().font;
-                        panelAnimator.transform.GetChild(3).GetChild(1).GetComponent<TMP_Text>().material = GameObject.Find("doorHydraulics").GetComponent<TMP_Text>().material;
-                        panelAnimator.transform.GetChild(3).GetChild(1).GetComponent<TMP_Text>().color = new Color(1, 0.3444f, 0, 1);
+                        panelAnimator.transform.GetChild(2).GetChild(0).GetComponent<InteractTrigger>().onInteract.AddListener(ElevatorMidEvent);
+                        panelAnimator.transform.GetChild(3).GetChild(0).GetComponent<InteractTrigger>().onInteract.AddListener(ElevatorDownEvent);
+                        panelAnimator.transform.GetChild(4).GetChild(1).GetComponent<TMP_Text>();
+                        panelAnimator.transform.GetChild(4).GetChild(1).GetComponent<TMP_Text>().font = GameObject.Find("doorHydraulics").GetComponent<TMP_Text>().font;
+                        panelAnimator.transform.GetChild(4).GetChild(1).GetComponent<TMP_Text>().material = GameObject.Find("doorHydraulics").GetComponent<TMP_Text>().material;
+                        panelAnimator.transform.GetChild(4).GetChild(1).GetComponent<TMP_Text>().color = new Color(1, 0.3444f, 0, 1);
                         if (!PlaceLung.emergencyPowerRequires || PlaceLung.lungPlaced)
                         {
                             if (Plugin.setKorean)
                             {
-                                panelAnimator.transform.GetChild(3).GetChild(1).GetComponent<TMP_Text>().text = "대기 중";
+                                panelAnimator.transform.GetChild(4).GetChild(1).GetComponent<TMP_Text>().text = "대기 중";
                             }
                             else
                             {
-                                panelAnimator.transform.GetChild(3).GetChild(1).GetComponent<TMP_Text>().text = "Idle";
+                                panelAnimator.transform.GetChild(4).GetChild(1).GetComponent<TMP_Text>().text = "Idle";
                             }
                         }else if (PlaceLung.emergencyPowerRequires && !PlaceLung.lungPlaced)
                         {
                             if (Plugin.setKorean)
                             {
-                                panelAnimator.transform.GetChild(3).GetChild(1).GetComponent<TMP_Text>().text = "전력 없음";
+                                panelAnimator.transform.GetChild(4).GetChild(1).GetComponent<TMP_Text>().text = "전력 없음";
                             }
                             else
                             {
-                                panelAnimator.transform.GetChild(3).GetChild(1).GetComponent<TMP_Text>().text = "No Power";
+                                panelAnimator.transform.GetChild(4).GetChild(1).GetComponent<TMP_Text>().text = "No Power";
                             }
                         }
                         panelAnimators.Add(panelAnimator);
                         upButtons.Add(panelAnimator.transform.GetChild(1).GetChild(0).GetComponent<InteractTrigger>());
-                        downButtons.Add(panelAnimator.transform.GetChild(2).GetChild(0).GetComponent<InteractTrigger>());
+                        midButtons.Add(panelAnimator.transform.GetChild(2).GetChild(0).GetComponent<InteractTrigger>());
+                        downButtons.Add(panelAnimator.transform.GetChild(3).GetChild(0).GetComponent<InteractTrigger>());
                     }
                 }
 
@@ -333,6 +352,20 @@ namespace LCOffice.Patches
                 ElevatorUpTriggerEvent.InvokeAllClients();
             }
         }
+        public static void ElevatorMidEvent(PlayerControllerB playerController)
+        {
+            if (PlaceLung.emergencyPowerRequires)
+            {
+                if (PlaceLung.lungPlaced)
+                {
+                    ElevatorMidTriggerEvent.InvokeAllClients();
+                }
+            }
+            else
+            {
+                ElevatorMidTriggerEvent.InvokeAllClients();
+            }
+        }
         public static void ElevatorDownEvent(PlayerControllerB playerController)
         {
             if (PlaceLung.emergencyPowerRequires)
@@ -348,40 +381,39 @@ namespace LCOffice.Patches
         }
 
         public static void ElevatorTriggerUp(ulong id) { ElevatorUpTrigger(); }
+        public static void ElevatorTriggerMid(ulong id) { ElevatorMidTrigger(); }
         public static void ElevatorTriggerDown(ulong id) { ElevatorDownTrigger(); }
 
         public static void ElevatorUpTrigger()
         {
-            if (elevatorFloor.Value < 2)
-            {
-                elevatorFloor.Value += 1;
-            }
+            Plugin.mls.LogInfo("ElevatorUpTrigger");
+            elevatorFloor.Value = 2;
             if (doorAnimator.GetBool("closed") && animator.GetInteger("floor") < elevatorFloor.Value && animator.GetCurrentAnimatorStateInfo(0).normalizedTime >= 1.0f)
             {
                 foreach (Animator panelAnimator in panelAnimators)
                 {
-                    if (panelAnimator.transform.GetChild(3).GetChild(1).GetComponent<TMP_Text>() != null)
+                    if (panelAnimator.transform.GetChild(4).GetChild(1).GetComponent<TMP_Text>() != null)
                     {
                         if (!PlaceLung.emergencyPowerRequires || PlaceLung.lungPlaced)
                         {
                             if (Plugin.setKorean)
                             {
-                                panelAnimator.transform.GetChild(3).GetChild(1).GetComponent<TMP_Text>().text = "상승 중";
+                                panelAnimator.transform.GetChild(4).GetChild(1).GetComponent<TMP_Text>().text = "상승 중";
                             }
                             else
                             {
-                                panelAnimator.transform.GetChild(3).GetChild(1).GetComponent<TMP_Text>().text = "Ascending";
+                                panelAnimator.transform.GetChild(4).GetChild(1).GetComponent<TMP_Text>().text = "Ascending";
                             }
                         }
                         else if (PlaceLung.emergencyPowerRequires && !PlaceLung.lungPlaced)
                         {
                             if (Plugin.setKorean)
                             {
-                                panelAnimator.transform.GetChild(3).GetChild(1).GetComponent<TMP_Text>().text = "전력 없음";
+                                panelAnimator.transform.GetChild(4).GetChild(1).GetComponent<TMP_Text>().text = "전력 없음";
                             }
                             else
                             {
-                                panelAnimator.transform.GetChild(3).GetChild(1).GetComponent<TMP_Text>().text = "No Power";
+                                panelAnimator.transform.GetChild(4).GetChild(1).GetComponent<TMP_Text>().text = "No Power";
                             }
                         }
                     }    
@@ -389,48 +421,83 @@ namespace LCOffice.Patches
             }
         }
 
-        public static void ElevatorDownTrigger()
+        public static void ElevatorMidTrigger()
         {
-            if (elevatorFloor.Value > 0)
-            {
-                elevatorFloor.Value -= 1;
-            }
-            if (doorAnimator.GetBool("closed") && animator.GetInteger("floor") > elevatorFloor.Value && animator.GetCurrentAnimatorStateInfo(0).normalizedTime >= 1.0f)
+            Plugin.mls.LogInfo("ElevatorMidTrigger");
+            elevatorFloor.Value = 1;
+            if (doorAnimator.GetBool("closed") && animator.GetInteger("floor") < elevatorFloor.Value && animator.GetCurrentAnimatorStateInfo(0).normalizedTime >= 1.0f)
             {
                 foreach (Animator panelAnimator in panelAnimators)
                 {
-                    if (panelAnimator.transform.GetChild(3).GetChild(1).GetComponent<TMP_Text>() != null)
+                    if (panelAnimator.transform.GetChild(4).GetChild(1).GetComponent<TMP_Text>() != null)
                     {
                         if (!PlaceLung.emergencyPowerRequires || PlaceLung.lungPlaced)
                         {
                             if (Plugin.setKorean)
                             {
-                                panelAnimator.transform.GetChild(3).GetChild(1).GetComponent<TMP_Text>().text = "하강 중";
-                            }else
-                            {
-                                panelAnimator.transform.GetChild(3).GetChild(1).GetComponent<TMP_Text>().text = "Descending";
-                            }
-                        }
-                        else if (PlaceLung.emergencyCheck)
-                        {
-                            if (Plugin.setKorean)
-                            {
-                                panelAnimator.transform.GetChild(3).GetChild(1).GetComponent<TMP_Text>().text = "긴급 하강 중";
+                                panelAnimator.transform.GetChild(4).GetChild(1).GetComponent<TMP_Text>().text = "상승 중";
                             }
                             else
                             {
-                                panelAnimator.transform.GetChild(3).GetChild(1).GetComponent<TMP_Text>().text = "Emergency\nDescending";
+                                panelAnimator.transform.GetChild(4).GetChild(1).GetComponent<TMP_Text>().text = "Ascending";
                             }
                         }
                         else if (PlaceLung.emergencyPowerRequires && !PlaceLung.lungPlaced)
                         {
                             if (Plugin.setKorean)
                             {
-                                panelAnimator.transform.GetChild(3).GetChild(1).GetComponent<TMP_Text>().text = "전력 없음";
+                                panelAnimator.transform.GetChild(4).GetChild(1).GetComponent<TMP_Text>().text = "전력 없음";
                             }
                             else
                             {
-                                panelAnimator.transform.GetChild(3).GetChild(1).GetComponent<TMP_Text>().text = "No Power";
+                                panelAnimator.transform.GetChild(4).GetChild(1).GetComponent<TMP_Text>().text = "No Power";
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        public static void ElevatorDownTrigger()
+        {
+            Plugin.mls.LogInfo("ElevatorDownTrigger");
+            elevatorFloor.Value = 0;
+            if (doorAnimator.GetBool("closed") && animator.GetInteger("floor") > elevatorFloor.Value && animator.GetCurrentAnimatorStateInfo(0).normalizedTime >= 1.0f)
+            {
+                foreach (Animator panelAnimator in panelAnimators)
+                {
+                    if (panelAnimator.transform.GetChild(4).GetChild(1).GetComponent<TMP_Text>() != null)
+                    {
+                        if (!PlaceLung.emergencyPowerRequires || PlaceLung.lungPlaced)
+                        {
+                            if (Plugin.setKorean)
+                            {
+                                panelAnimator.transform.GetChild(4).GetChild(1).GetComponent<TMP_Text>().text = "하강 중";
+                            }else
+                            {
+                                panelAnimator.transform.GetChild(4).GetChild(1).GetComponent<TMP_Text>().text = "Descending";
+                            }
+                        }
+                        else if (PlaceLung.emergencyCheck)
+                        {
+                            if (Plugin.setKorean)
+                            {
+                                panelAnimator.transform.GetChild(4).GetChild(1).GetComponent<TMP_Text>().text = "긴급 하강 중";
+                            }
+                            else
+                            {
+                                panelAnimator.transform.GetChild(4).GetChild(1).GetComponent<TMP_Text>().text = "Emergency\nDescending";
+                            }
+                        }
+                        else if (PlaceLung.emergencyPowerRequires && !PlaceLung.lungPlaced)
+                        {
+                            if (Plugin.setKorean)
+                            {
+                                panelAnimator.transform.GetChild(4).GetChild(1).GetComponent<TMP_Text>().text = "전력 없음";
+                            }
+                            else
+                            {
+                                panelAnimator.transform.GetChild(4).GetChild(1).GetComponent<TMP_Text>().text = "No Power";
                             }
                         }
                     }

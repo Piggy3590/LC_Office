@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using Unity.Jobs;
 using Unity.Netcode;
 using UnityEngine;
+using UnityEngine.Animations;
 using UnityEngine.InputSystem.HID;
 
 namespace LCOffice.Patches
@@ -19,10 +20,13 @@ namespace LCOffice.Patches
 
         public LethalClientMessage<bool> SendInElevator = new LethalClientMessage<bool>("SendInElevator", onReceivedFromClient:IsInElevatorSync);
         public List<BoxCollider> allColliders = new List<BoxCollider>();
+        public List<GameObject> bottomDoors = new List<GameObject>();
+        public bool bottomIsAlive;
         public Transform storageParent;
         public Transform lungPlacement;
         public Transform colliderPos;
         public Transform elevatorTransform;
+        public ConstraintSource constraintSource;
 
         public ElevatorSystem elevatorSystem;
 
@@ -46,6 +50,10 @@ namespace LCOffice.Patches
 
         void Start()
         {
+            bottomDoors.Add(GameObject.Find("OfficeBtmDoor1"));
+            bottomDoors.Add(GameObject.Find("OfficeBtmDoor2"));
+            bottomDoors.Add(GameObject.Find("OfficeBtmDoor3"));
+            bottomDoors.Add(GameObject.Find("OfficeBtmDoor4"));
             elevatorTransform = GameObject.Find("StartRoomElevator").transform;
             checkBounds.size = new Vector3(4.9f, 17f, 4.9f);
             foreach (GameObject player in StartOfRound.Instance.allPlayerObjects)
@@ -53,14 +61,50 @@ namespace LCOffice.Patches
                 allColliders.Add(player.GetComponent<BoxCollider>());
             }
             //lungPlacement = GameObject.FindObjectOfType<PlaceLung>().transform;
-            colliderPos = GameObject.Find("InsideColliderPos").transform;
-        }
 
-        void FixedUpdate()
-        {
-            if (colliderPos != null)
+            colliderPos = GameObject.Find("InsideColliderPos").transform;
+
+            if (GameObject.Find("OfficeTopDoor").transform.childCount == 0
+                    || GameObject.Find("OfficeTopDoor").transform.GetChild(0).name != "OfficeDoorBlocker(Clone)")
             {
-                this.transform.position = colliderPos.position;
+                GameObject.Destroy(GameObject.Find("NotionUpOff"));
+            }
+            else
+            {
+                GameObject.Destroy(GameObject.Find("NotionUpOn"));
+            }
+
+            if (GameObject.Find("OfficeMidDoor").transform.childCount == 0
+                || GameObject.Find("OfficeMidDoor").transform.GetChild(0).name != "OfficeDoorBlocker(Clone)")
+            {
+                GameObject.Destroy(GameObject.Find("NotionMidOff"));
+            }
+            else
+            {
+                GameObject.Destroy(GameObject.Find("NotionMidOn"));
+            }
+            foreach (GameObject bottomDoor in bottomDoors)
+            {
+                if (bottomDoor.transform.childCount > 0)
+                {
+                    if (bottomDoor.transform.GetChild(0).name != "OfficeDoorBlocker(Clone)")
+                    {
+                        bottomIsAlive = true;
+                    }
+                }
+                if (bottomDoor.transform.childCount == 0)
+                {
+                    bottomIsAlive = true;
+                }
+            }
+
+            if (bottomIsAlive)
+            {
+                GameObject.Destroy(GameObject.Find("NotionDownOff"));
+            }
+            else
+            {
+                GameObject.Destroy(GameObject.Find("NotionDownOn"));
             }
         }
 
@@ -70,7 +114,15 @@ namespace LCOffice.Patches
             {
                 return;
             }
-
+            if (colliderPos != null)
+            {
+                this.transform.position = colliderPos.position;
+                this.transform.rotation = colliderPos.rotation;
+                checkBounds.center = colliderPos.position;
+            }else
+            {
+                colliderPos = GameObject.Find("InsideColliderPos").transform;
+            }
 
             if (storageParent == null)
             {
@@ -88,8 +140,11 @@ namespace LCOffice.Patches
             if (elevatorSystem == null)
             {
                 elevatorSystem = GameObject.FindObjectOfType<ElevatorSystem>();
+                foreach (ItemElevatorCheck itemElevatorCheck in GameObject.FindObjectsOfType<ItemElevatorCheck>())
+                {
+                    itemElevatorCheck.elevatorCollider = this;
+                }
             }
-            checkBounds.center = colliderPos.position;
 
             allColliders.RemoveAll(item => item == null || !item.gameObject.activeInHierarchy);
 
@@ -105,9 +160,9 @@ namespace LCOffice.Patches
                         {
                             playerElevatorCheck.elevatorCollider = this;
                         }
-                        if (!collider.GetComponent<PlayerElevatorCheck>().isInElevatorB && !playerController.isCameraDisabled)
+                        if (!collider.GetComponent<PlayerElevatorCheck>().isInElevatorB && !playerController.isCameraDisabled && !StartOfRound.Instance.shipIsLeaving)
                         {
-                            collider.transform.SetParent(elevatorTransform);
+                            collider.transform.SetParent(this.transform);
                             SendInElevator.SendAllClients(true);
                             playerElevatorCheck.wasInElevator = true;
                             playerElevatorCheck.isInElevatorB = true;
@@ -151,10 +206,10 @@ namespace LCOffice.Patches
                             */
                             if (collider.transform.parent != storageParent)
                             {
-                                collider.transform.SetParent(elevatorTransform, true);
+                                itemElevatorCheck.isInElevatorB = true;
+                                collider.transform.SetParent(this.transform, true);
                                 grabbableObject.targetFloorPosition = tempTargetFloorPosition;
                                 grabbableObject.startFallingPosition = tempStartFallingPosition;
-                                itemElevatorCheck.isInElevatorB = true;
                             }
                         }
                     }
@@ -183,7 +238,7 @@ namespace LCOffice.Patches
                         PlayerElevatorCheck playerElevatorCheck = collider.GetComponent<PlayerElevatorCheck>();
                         if (!playerElevatorCheck.isInElevatorB && playerController.isCameraDisabled && playerElevatorCheck.isInElevatorNotOwner)
                         {
-                            collider.transform.SetParent(elevatorTransform, true);
+                            collider.transform.SetParent(this.transform, true);
                             playerElevatorCheck.isInElevatorB = true;
                             playerElevatorCheck.wasInElevator = true;
                         }

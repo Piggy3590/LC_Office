@@ -22,13 +22,13 @@ namespace LCOffice.Patches
 {
     public class PlaceableLungProp : MonoBehaviour
     {
+        /*
         public bool isSetupEnd;
         public bool isPlaced;
         public ElevatorSystem elevatorSystem;
         public PlaceLung placeLung;
         public LungProp lungProp;
         public bool ignoreColliderBool;
-
         void Start()
         {
             lungProp = this.GetComponent<LungProp>();
@@ -183,5 +183,6 @@ namespace LCOffice.Patches
             elevatorSystem = GameObject.FindObjectOfType<ElevatorSystem>();
             isSetupEnd = true;
         }
+        */
     }
 }

@@ -89,15 +89,16 @@ namespace LCOffice.Patches
         void ResetStaticVariable(Scene scene, LoadSceneMode mode)
         {
             //GameObject.Destroy(GameObject.FindObjectOfType<ElevatorCollider>());
+            PlaceLung.emergencyPowerRequires = false;
+            PlaceLung.emergencyCheck = false;
+            PlaceLung.lungPlaced = false;
+            /*
             PlaceLung.lungPlacedThisFrame = false;
             PlaceLung.placeLungNetwork = false;
             PlaceLung.lungPlacer.Value = null;
             PlaceLung.placedLung.Value = null;
             PlaceLung.isPlaceCalled = false;
-            PlaceLung.lungPlaced = false;
             PlaceLung.lungPlacedLocalFrame = false;
-            PlaceLung.emergencyPowerRequires = false;
-            PlaceLung.emergencyCheck = false;
             PlaceLung.isSetupEnd = false;
             PlaceLung.socketLED = null;
             PlaceLung.socketAudioSource = null;
@@ -105,6 +106,7 @@ namespace LCOffice.Patches
             PlaceLung.lungPos = null;
             PlaceLung.lungSocket = null;
             PlaceLung.isSetupEnd = false;
+            */
 
             ElevatorSystem.elevatorFloor.Value = 1;
             ElevatorSystem.isElevatorClosed = false;
@@ -144,22 +146,31 @@ namespace LCOffice.Patches
                         interactTrigger.hoverTip = "문 사용하기 : [E]";
                     }
 
-                    if (interactTrigger.hoverTip == "Go up : [LMB]")
+                    if (interactTrigger.hoverTip == "Go to the 1st floor : [LMB]")
                     {
-                        interactTrigger.hoverTip = "상승하기 : [LMB]";
+                        interactTrigger.hoverTip = "1층으로 이동하기 : [LMB]";
                     }
-                    else if (interactTrigger.hoverTip == "Go up : [E]")
+                    else if (interactTrigger.hoverTip == "Go to the 1st floor : [E]")
                     {
-                        interactTrigger.hoverTip = "상승하기 : [E]";
+                        interactTrigger.hoverTip = "1층으로 이동하기 : [E]";
                     }
 
-                    if (interactTrigger.hoverTip == "Go down : [LMB]")
+                    if (interactTrigger.hoverTip == "Go to the 2nd floor : [LMB]")
                     {
-                        interactTrigger.hoverTip = "하강하기 : [LMB]";
+                        interactTrigger.hoverTip = "2층으로 이동하기 : [LMB]";
                     }
-                    else if (interactTrigger.hoverTip == "Go down : [E]")
+                    else if (interactTrigger.hoverTip == "Go to the 2nd floor : [E]")
                     {
-                        interactTrigger.hoverTip = "하강하기 : [E]";
+                        interactTrigger.hoverTip = "2층으로 이동하기 : [E]";
+                    }
+
+                    if (interactTrigger.hoverTip == "Go to the 3rd floor : [LMB]")
+                    {
+                        interactTrigger.hoverTip = "3층으로 이동하기 : [LMB]";
+                    }
+                    else if (interactTrigger.hoverTip == "Go to the 3rd floor : [E]")
+                    {
+                        interactTrigger.hoverTip = "3층으로 이동하기 : [E]";
                     }
 
                     if (interactTrigger.hoverTip == "Place Apparatus : [LMB]")

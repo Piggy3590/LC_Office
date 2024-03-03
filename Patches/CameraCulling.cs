@@ -18,17 +18,26 @@ namespace LCOffice.Patches
         public Transform player;
         public Camera camera;
         public Transform cullPos;
+        public GameObject[] playerObjects;
+        public Transform lookAtTarget;
+
+        public bool isElevatorCamera;
 
         public float fps = 25;
         private float elapsed;
 
         void Start()
         {
+            if (this.name != "FacilitySecurityCamera")
+            {
+                isElevatorCamera = true;
+            }
             player = StartOfRound.Instance.localPlayerController.transform;
             camera = this.GetComponent<Camera>();
             camera.enabled = false;
             cullPos = GameObject.Find("FacilityCameraMonitor").transform;
             fps = 20;
+            playerObjects = StartOfRound.Instance.allPlayerObjects;
         }
         void Update()
         {
@@ -45,6 +54,23 @@ namespace LCOffice.Patches
                     camera.Render();
                 }
             }
+        }
+
+        void LateUpdate()
+        {
+            if (!isElevatorCamera) { return; }
+            foreach (GameObject player in playerObjects)
+            {
+                float playerDistance = Vector3.Distance(this.transform.position, player.transform.position);
+                if (playerDistance < 30f && playerDistance < Mathf.Infinity)
+                {
+                    lookAtTarget = player.transform;
+                }
+            }
+            Vector3 lookDirection = lookAtTarget.position - this.transform.position;
+            lookDirection.Normalize();
+
+            this.transform.rotation = Quaternion.Slerp(this.transform.rotation, Quaternion.LookRotation(lookDirection), 5 * Time.deltaTime);
         }
     }
 }

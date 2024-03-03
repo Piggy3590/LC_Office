@@ -27,8 +27,6 @@ namespace LCOffice.Patches
 
         public Vector3 orgScale;
 
-        public GameObject storageObject;
-
         void Start()
         {
             if (this.GetComponent<PlayerControllerB>() != null)
@@ -42,6 +40,10 @@ namespace LCOffice.Patches
             }
             orgScale = this.transform.localScale;
             boxCollider = this.GetComponent<BoxCollider>();
+            if (elevatorCollider == null)
+            {
+                elevatorCollider = GameObject.FindObjectOfType<ElevatorCollider>();
+            }
         }
 
         void LateUpdate()
@@ -68,35 +70,30 @@ namespace LCOffice.Patches
                     dogEatTimer = 0;
                 }
             }
-            if (OfficeRoundSystem.Instance == null) { return; }
-            if (!isAppendedToArray && !StartOfRound.Instance.inShipPhase)
+            if (isAppendedToArray && !TimeOfDay.Instance.currentDayTimeStarted)
             {
-                if (OfficeRoundSystem.Instance.isOffice)
+                isAppendedToArray = false;
+            }
+            if (elevatorCollider != null)
+            {
+                if (!isAppendedToArray && TimeOfDay.Instance.currentDayTimeStarted)
                 {
-                    if (elevatorCollider == null && GameObject.FindObjectOfType<ElevatorCollider>() != null)
-                    {
-                        elevatorCollider = GameObject.FindObjectOfType<ElevatorCollider>();
-                    }
-                    if (!ignoreCollider && !elevatorCollider.allColliders.Contains(boxCollider))
+                    if (OfficeRoundSystem.Instance.isOffice)
                     {
                         elevatorCollider.allColliders.Add(boxCollider);
-                    }
-                    if (storageObject == null)
-                    {
-                        storageObject = GameObject.Find("ElevatorStorage(Clone)");
-                    }else
-                    {
-                        if (this.transform.parent == storageObject && grabbableObject.isHeld)
+                        /*
+                        if (!ignoreCollider && !elevatorCollider.allColliders.Contains(boxCollider))
                         {
-                            this.transform.SetParent(null);
+                            elevatorCollider.allColliders.Add(boxCollider);
                         }
+                        if (ignoreCollider && elevatorCollider.allColliders.Contains(boxCollider))
+                        {
+                            elevatorCollider.allColliders.Remove(boxCollider);
+                        }
+                        */
                     }
-                    if (ignoreCollider && elevatorCollider.allColliders.Contains(boxCollider))
-                    {
-                        elevatorCollider.allColliders.Remove(boxCollider);
-                    }
+                    isAppendedToArray = true;
                 }
-                isAppendedToArray = true;
             }
 
             if (this.transform.localScale != orgScale)
@@ -104,6 +101,7 @@ namespace LCOffice.Patches
                 this.transform.localScale = orgScale;
             }
 
+            if (OfficeRoundSystem.Instance == null) { return; }
             if (OfficeRoundSystem.Instance.isOffice && isInElevatorB && grabbableObject.isHeld)
             {
                 isInElevatorB = false;
