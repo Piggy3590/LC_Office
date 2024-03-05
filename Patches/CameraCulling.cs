@@ -67,10 +67,13 @@ namespace LCOffice.Patches
                     lookAtTarget = player.transform;
                 }
             }
-            Vector3 lookDirection = lookAtTarget.position - this.transform.position;
-            lookDirection.Normalize();
+            if (lookAtTarget != null)
+            {
+                Vector3 lookDirection = lookAtTarget.position - this.transform.position;
+                lookDirection.Normalize();
 
-            this.transform.rotation = Quaternion.Slerp(this.transform.rotation, Quaternion.LookRotation(lookDirection), 5 * Time.deltaTime);
+                this.transform.rotation = Quaternion.Slerp(this.transform.rotation, Quaternion.LookRotation(lookDirection), 5 * Time.deltaTime);
+            }
         }
     }
 }

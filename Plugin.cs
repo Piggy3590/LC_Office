@@ -34,7 +34,7 @@ namespace LCOffice
     {
         private const string modGUID = "Piggy.LCOffice";
         private const string modName = "LCOffice";
-        private const string modVersion = "1.0.4";
+        private const string modVersion = "1.1.0";
 
         private readonly Harmony harmony = new Harmony(modGUID);
 
@@ -83,6 +83,7 @@ namespace LCOffice
         public static GameObject socketInteractPrefab;
         public static GameObject insideCollider;
         public static EnemyType shrimpEnemy;
+        public static EnemyType haltEnemy;
 
         public static GameObject officeRoundSystem;
 
@@ -97,6 +98,9 @@ namespace LCOffice
         public static DungeonFlow officeDungeonFlow_A;
         public static TerminalNode shrimpTerminalNode;
         public static TerminalKeyword shrimpTerminalKeyword;
+
+        public static TerminalNode haltFile;
+        public static TerminalKeyword haltTK;
 
         public static Item coinItem;
         public static GameObject coinPrefab;
@@ -118,6 +122,19 @@ namespace LCOffice
 
         public static RuntimeDungeon dungeonGenerator;
 
+        public static RuntimeAnimatorController playerScreenController;
+        public static RuntimeAnimatorController playerScreenParentController;
+        public static AudioClip haltMusic;
+        public static AudioClip haltNoise1;
+        public static AudioClip haltNoise2;
+        public static AudioClip haltNoise3;
+        public static AudioClip haltNoise4;
+        public static AudioClip haltAttack;
+        public static GameObject haltRoom;
+        public static GameObject haltNoiseScreen;
+        public static GameObject haltVolume;
+        public static GameObject glitchSound;
+
         public static string PluginDirectory;
 
         private ConfigEntry<bool> configGuaranteedOffice;
@@ -132,6 +149,7 @@ namespace LCOffice
         private ConfigEntry<bool> configEnableScraps;
 
         public static bool setKorean;
+        public static bool configForceHalt;
         public static float musicVolume;
 
         public static Item bottleItem;
@@ -178,6 +196,7 @@ namespace LCOffice
                 musicVolume = (float)base.Config.Bind<float>("General", "ElevatorMusicVolume", 100, "Set the volume of music played in the elevator. (0 - 100)").Value;
 
                 this.shrimpSpawnWeight = base.Config.Bind<int>("Spawn", "ShrimpSpawnWeight", 5, new ConfigDescription("Sets the shrimp spawn weight for every moons.", null, Array.Empty<object>()));
+                configForceHalt = (bool)base.Config.Bind<bool>("Spawn", "ForceSpawnHalt", false, "Force Halt to spawn in long hallways (maximum 1 hallway). If two or more long hallways are generated, one random hallway will be assigned.").Value;
                 //this.shrimpSpawnWeight = base.Config.Bind<string>("Spawn", "ShrimpSpawnWeight", "0,1,1,2,1,5,6,8", new ConfigDescription("Set the shrimp spawn weight for each moon. In this order:\n(experimentation, assurance, vow, march, offense, rend, dine, titan).", null, Array.Empty<object>()));
                 //this.shrimpModdedSpawnWeight = base.Config.Bind<int>("Spawn", "ShrimpModdedMoonSpawnWeight", 5, new ConfigDescription("Set the shrimp spawn weight for modded moon. ", null, Array.Empty<object>()));
 
@@ -207,8 +226,8 @@ namespace LCOffice
                 bool flag7 = text == "all";
                 if (flag7)
                 {
-                    officeExtendedDungeonFlow.manualContentSourceNameReferenceList.Add(new StringWithRarity("Lethal Company", num));
-                    officeExtendedDungeonFlow.manualContentSourceNameReferenceList.Add(new StringWithRarity("Custom", num));
+                    officeExtendedDungeonFlow.dynamicLevelTagsList.Add(new StringWithRarity("Vanilla", num));
+                    officeExtendedDungeonFlow.dynamicLevelTagsList.Add(new StringWithRarity("Custom", num));
                     mls.LogInfo("Registered Office dungeon for all moons.");
                 }
                 else
@@ -216,7 +235,7 @@ namespace LCOffice
                     bool flag8 = text == "vanilla";
                     if (flag8)
                     {
-                        officeExtendedDungeonFlow.manualContentSourceNameReferenceList.Add(new StringWithRarity("Lethal Company", num));
+                        officeExtendedDungeonFlow.dynamicLevelTagsList.Add(new StringWithRarity("Lethal Company", num));
                         mls.LogInfo("Registered Office dungeon for all vanilla moons.");
                     }
                     else
@@ -224,7 +243,7 @@ namespace LCOffice
                         bool flag9 = text == "modded";
                         if (flag9)
                         {
-                            officeExtendedDungeonFlow.manualContentSourceNameReferenceList.Add(new StringWithRarity("Custom", num));
+                            officeExtendedDungeonFlow.dynamicLevelTagsList.Add(new StringWithRarity("Custom", num));
                             mls.LogInfo("Registered Office dungeon for all modded moons.");
                         }
                         else
@@ -303,6 +322,7 @@ namespace LCOffice
 
                 shrimpPrefab = Bundle.LoadAsset<GameObject>("Shrimp.prefab");
                 shrimpEnemy = Bundle.LoadAsset<EnemyType>("ShrimpEnemy.asset");
+                haltEnemy = Bundle.LoadAsset<EnemyType>("HaltEnemy.asset");
 
                 elevatorManager = Bundle.LoadAsset<GameObject>("ElevatorSystem.prefab");
 
@@ -348,7 +368,11 @@ namespace LCOffice
                 shrimpTerminalNode = Bundle.LoadAsset<TerminalNode>("ShrimpFile.asset");
                 shrimpTerminalKeyword = Bundle.LoadAsset<TerminalKeyword>("shrimpTK.asset");
 
+                haltFile = Bundle.LoadAsset<TerminalNode>("haltFile.asset");
+                haltTK = Bundle.LoadAsset<TerminalKeyword>("haltTK.asset");
+
                 //Items
+                /*
                 coinItem = Bundle.LoadAsset<Item>("Coin.asset");
                 coinPrefab = Bundle.LoadAsset<GameObject>("Coin.prefab");
                 LethalLib.Modules.NetworkPrefabs.RegisterNetworkPrefab(coinPrefab);
@@ -382,12 +406,30 @@ namespace LCOffice
                     Items.RegisterScrap(laptopItem, 3, LevelTypes.All);
                     Items.RegisterScrap(wrenchItem, 8, LevelTypes.All);
                 }
+                */
+
+                playerScreenController = Bundle.LoadAsset<RuntimeAnimatorController>("PlayerScreenRe.controller");
+                playerScreenParentController = Bundle.LoadAsset<RuntimeAnimatorController>("PlayerScreenParent.controller");
+                haltMusic = Bundle.LoadAsset<AudioClip>("HaltMusic.wav");
+                haltNoise1 = Bundle.LoadAsset<AudioClip>("HaltNoise1.wav");
+                haltNoise2 = Bundle.LoadAsset<AudioClip>("HaltNoise2.wav");
+                haltNoise3 = Bundle.LoadAsset<AudioClip>("HaltNoise3.wav");
+                haltNoise4 = Bundle.LoadAsset<AudioClip>("HaltNoise4.wav");
+                haltAttack = Bundle.LoadAsset<AudioClip>("HaltAttack.wav");
+                haltRoom = Bundle.LoadAsset<GameObject>("HaltTile.prefab");
+                haltNoiseScreen = Bundle.LoadAsset<GameObject>("NoiseScreen.prefab");
+                haltVolume = Bundle.LoadAsset<GameObject>("HaltVolume.prefab");
+                glitchSound = Bundle.LoadAsset<GameObject>("GlitchSound.prefab");
 
                 if (!setKorean)
                 {
                     shrimpTerminalNode.displayText = "Shrimp\r\n\r\nSigurd’s Danger Level: 60%\r\n\r\n\nScientific name: Canispiritus-Artemus\r\n\r\nShrimps are dog-like creatures, known to be the first tenant of the Upturned Inn. For the most part, he is relatively friendly to humans, following them around, curiously stalking them. Unfortunately, their passive temperament comes with a dangerously vicious hunger.\r\nDue to the nature of their biology, he has a much more unique stomach organ than most other creatures. The stomach lining is flexible, yet hardy, allowing a Shrimp to digest and absorb the nutrients from anything, biological or not, so long as it isn’t too large.\r\n\r\nHowever, this evolutionary adaptation was most likely a result of their naturally rapid metabolism. He uses nutrients so quickly that he needs to eat multiple meals a day to survive. The time between these meals are inconsistent, as the rate of caloric consumption is variable. This can range from hours to even minutes and causes the shrimp to behave monstrously if he has not eaten for a while.\r\n\r\nKnown to live in abandoned buildings, shrimp can often be seen in large abandoned factories or offices scavenging for scrap metal, to eat. That isn’t to say he can’t be found elsewhere. He is usually a lone hunters and expert trackers out of necessity.\r\n\r\nSigurd’s Note:\r\nIf this guy spots you, you’ll want to drop something you’re holding and let him eat it. It’s either you or that piece of scrap on you.\r\n\r\nit’s best to avoid letting him spot you. I swear… it’s almost like his eyes are staring into your soul.\r\nI never want to see one of these guys behind me again.\r\n\r\n\r\nIK: <i>Sir, don't be sad! Shrimp didn't hate you.\r\nhe was just... hungry.</i>\r\n\r\n";
                     shrimpTerminalNode.creatureName = "Shrimp";
                     shrimpTerminalKeyword.word = "shrimp";
+
+                    haltFile.displayText = "Halt\r\n\r\nSigurd’s Danger Level: 40%\r\n\r\n\r\nHalt takes an appearance as a large translucent blue ghost, with illuminating, glowing cyan eyes and a static aura. Its ghostly body has a waveform scale and a visible opening at the bottom.\r\n\r\n\r\nHalt mainly lives in long hallways and has no way of identifying its target until it enters the hallway. If the target enters Halt's hallway, the target will hallucinate and the hallway will feel much longer.\r\nHalt moves slowly towards his target and attempts to kill him. If the target is close enough, Halt will damage the target and send it back to the center of the hallway.\r\n\r\nOften Halt will stop the chase and resume the chase in the opposite direction of the hallway. At this point, the suit's HUD will display the message \"TURN AROUND.\"\r\nIf the target reaches the end of the hallway, all of Halt's attacks stop.\r\n\r\nNothing is known about how Halt attacks.\r\n";
+                    haltFile.creatureName = "Halt";
+                    haltTK.word = "halt";
                 }
                 else
                 {
@@ -395,6 +437,11 @@ namespace LCOffice
                     shrimpTerminalNode.creatureName = "쉬림프";
                     shrimpTerminalKeyword.word = "쉬림프";
 
+                    haltFile.displayText = "홀트\r\n\r\n시구르드의 위험 수준: 40%\r\n\r\n홀트는 빛을 발하는 청록색 눈과 정적인 분위기를 풍기는 커다란 반투명 파란색 유령의 형상을 가진 생명체입니다. \r\n\r\n주로 긴 복도에 서식하는 홀트는 목표물이 직접 복도에 들어서기 전까지는 파악할 방법이 없습니다. 만약 목표물이 홀트의 복도에 진입한다면 목표물에게 환각을 일으키며, 이 때 목표물은 복도가 훨씬 길게 느껴지게 됩니다.\r\n\r\n홀트는 목표물을 향해 천천히 움직이며 목표물을 처치하려고 시도합니다. 만약 목표물과 거리가 충분히 가깝다면 홀트는 목표물에게 피해를 주고 복도의 중앙으로 돌려보냅니다.\r\n종종 홀트는 추격을 멈추고 복도의 반대 방향에서 다시 추격하기도 합니다. 이 때 슈트의 HUD에서 \"TURN AROUND\"라는 메시지가 표시됩니다.\r\n만약 목표물이 복도의 끝에 다다른다면 홀트의 모든 공격이 멈춥니다.\r\n\r\n홀트이 공격하는 방식에 대해서는 알려진 것이 없습니다.";
+                    haltFile.creatureName = "홀트";
+                    haltTK.word = "홀트";
+
+                    /*
                     coinItem.itemName = "동전";
                     coinPrefab.transform.GetChild(1).GetComponent<ScanNodeProperties>().headerText = "동전";
 
@@ -409,9 +456,11 @@ namespace LCOffice
 
                     wrenchItem.itemName = "렌치";
                     wrenchPrefab.transform.GetChild(1).GetComponent<ScanNodeProperties>().headerText = "렌치";
+                    */
                 }
 
                 LethalLib.Modules.Enemies.RegisterEnemy(shrimpEnemy, shrimpSpawnWeight.Value, Levels.LevelTypes.All, Enemies.SpawnType.Default, shrimpTerminalNode, shrimpTerminalKeyword);
+                LethalLib.Modules.Enemies.RegisterEnemy(haltEnemy, 0, Levels.LevelTypes.All, Enemies.SpawnType.Default, haltFile, haltTK);
                 /*
                 int[] numbers = shrimpSpawnWeight.Value.Split(',').Select(int.Parse).ToArray();
                 LevelTypes[] levelTypes = {
@@ -449,8 +498,7 @@ namespace LCOffice
                 LethalLib.Modules.NetworkPrefabs.RegisterNetworkPrefab(socketInteractPrefab);
                 LethalLib.Modules.NetworkPrefabs.RegisterNetworkPrefab(officeRoundSystem);
                 LethalLib.Modules.NetworkPrefabs.RegisterNetworkPrefab(insideCollider);
-
-                
+                LethalLib.Modules.NetworkPrefabs.RegisterNetworkPrefab(glitchSound);
 
                 //LethalLib.Modules.Enemies.RegisterEnemy(shrimpEnemy, 10, Levels.LevelTypes.All, Enemies.SpawnType.Default, shrimpTerminalNode, shrimpTerminalKeyword);
 
@@ -510,7 +558,8 @@ namespace LCOffice
                 {
                     EntranceTeleport entranceTeleport = GameObject.Find("OfficeTeleport(Clone)").GetComponent<EntranceTeleport>();
                     entranceTeleport.entranceId = 40;
-                }else
+                }
+                else
                 {
                     //EntranceTeleport entranceTeleport = GameObject.Find("OfficeTeleport(Clone)").GetComponent<EntranceTeleport>();
                     //entranceTeleport.entranceId = 40;

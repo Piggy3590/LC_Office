@@ -12,6 +12,7 @@ using System.Threading.Tasks;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using TMPro;
 
 namespace LCOffice.Patches
 {
@@ -21,6 +22,10 @@ namespace LCOffice.Patches
         public bool isOffice;
         public bool isChecked;
         public bool isDungeonOfficeChecked;
+
+        public static AudioSource haltMusicAudio;
+        public static Animator haltNoiseScreen;
+        public static Animator playerScreenAnimator;
 
         private void Awake()
         {
@@ -38,12 +43,21 @@ namespace LCOffice.Patches
         private void Start()
         {
             SceneManager.sceneLoaded += this.ResetStaticVariable;
+            haltMusicAudio = GameObject.Instantiate(GameObject.Find("Music2")).GetComponent<AudioSource>();
+            haltNoiseScreen = GameObject.Instantiate(Plugin.haltNoiseScreen, GameObject.Find("DebugMessagesPanel").transform).GetComponent<Animator>();
+            playerScreenAnimator = GameObject.Find("PlayerScreen").transform.parent.gameObject.AddComponent<Animator>();
+            playerScreenAnimator.runtimeAnimatorController = Plugin.playerScreenParentController;
+            OfficeRoundSystem.playerScreenAnimator.SetLayerWeight(1, 0.8f);
+            GameObject.Find("HaltTurnBackText").GetComponent<TMP_Text>().font = GameObject.Find("TipLeft1").GetComponent<TMP_Text>().font;
+            haltMusicAudio.name = "HaltMusic";
+
         }
 
         private void LateUpdate()
         {
             if (!this.isChecked && TimeOfDay.Instance.currentDayTimeStarted && RoundManager.Instance.dungeonGenerator != null)
             {
+                Plugin.mls.LogInfo(playerScreenAnimator.GetBool("rotateLoop"));
                 if (RoundManager.Instance.dungeonGenerator.Generator.DungeonFlow.name == "OfficeDungeonFlow")
                 {
                     isOffice = true;
@@ -117,6 +131,10 @@ namespace LCOffice.Patches
         {
             yield return new WaitForSeconds(7f);
             isChecked = true;
+            if (GameObject.Find("HaltOriginalTile(Clone)") != null)
+            {
+                GameObject.Find("HaltOriginalTile(Clone)").AddComponent<HaltRoom>();
+            }
             SetKorean();
             yield break;
         }
