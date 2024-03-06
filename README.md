@@ -5,19 +5,17 @@
 - Make sure you have the latest version of the mod, and if not, check the Changelog to see if the bug has been fixed! *(Although you don't have to)*
 - Other desync issues (elevator, creatures, etc.) are issues with my mod! If you find it, please report it!
 
-![Preview2](https://i.imgur.com/qRbVe3l.png)
+![Preview3](https://i.imgur.com/H6bvwwj.png)
 
-![Preview1](https://i.imgur.com/F2CT8C8.png)
+Adds new office-themed interior and new enemies!
 
-Adds new office-themed interior and new enemy!
-
-This mod adds **Shrimp** from Zeekerss' previous game, *The Upturned*.
+This mod adds **Halt** from *DOORS*, and **Shrimp** from Zeekerss' previous game, *The Upturned*.
 
 # Credits
 
 Models and rigs are from [The Upturned](https://store.steampowered.com/app/1717770/The_Upturned/) by Zeekerrs, which I will remove if it becomes an issue.
 
-[The Upturned](https://store.steampowered.com/app/1717770/The_Upturned/) is also an awesome game, Give it a try!
+Zeekerss' [The Upturned](https://store.steampowered.com/app/1717770/The_Upturned/), and LSPLASH's [DOORS](https://www.roblox.com/games/6516141723/DOORS) are also an awesome game, Give it a try!
 
 
 Thanks to:
