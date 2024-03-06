@@ -30,9 +30,9 @@ TheHomelessHobo - for his great help with writing the bestiary.
 
 music:
 
-+ REGRETEVATOR OST - bossa lullaby
-+ nico's nextbots ost - shop
++ [REGRETEVATOR](https://www.roblox.com/games/4972273297) OST - bossa lullaby
++ [nico's nextbots](https://www.roblox.com/games/10118559731) ost - shop
 + nico's nextbots ost - safe room
 + nico's nextbots ost - shop
 
-Every music was composed by nicopatty, special thanks to nicopatty for the great response to the mod!
+Every music was composed by [nicopatty](https://twitter.com/1nicopatty), special thanks to nicopatty for the great response to the mod!
