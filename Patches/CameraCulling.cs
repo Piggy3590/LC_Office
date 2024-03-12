@@ -28,36 +28,50 @@ namespace LCOffice.Patches
 
         void Start()
         {
-            if (this.name != "FacilitySecurityCamera")
+            if (this.name != "ElevatorCamera")
             {
                 isElevatorCamera = true;
             }
             player = StartOfRound.Instance.localPlayerController.transform;
             camera = this.GetComponent<Camera>();
-            camera.enabled = false;
             cullPos = GameObject.Find("FacilityCameraMonitor").transform;
-            fps = 20;
+            fps = Plugin.cameraFrameSpeed;
+            camera.enabled = false;
             playerObjects = StartOfRound.Instance.allPlayerObjects;
         }
         void Update()
         {
+            if (Plugin.cameraDisable)
+            {
+                return;
+            }
             if (player == null)
                 return;
 
             float distance = Vector3.Distance(cullPos.position, player.position);
             if (distance <= 10)
             {
-                elapsed += Time.deltaTime;
-                if (elapsed > 1f / fps)
+                if (Plugin.cameraFrameSpeed < 100)
                 {
-                    elapsed = 0f;
-                    camera.Render();
+                    elapsed += Time.deltaTime;
+                    if (elapsed > 1f / fps)
+                    {
+                        elapsed = 0f;
+                        camera.Render();
+                    }
+                }else
+                {
+                    camera.enabled = true;
                 }
             }
         }
 
         void LateUpdate()
         {
+            if (Plugin.cameraDisable)
+            {
+                return;
+            }
             if (!isElevatorCamera) { return; }
             foreach (GameObject player in playerObjects)
             {

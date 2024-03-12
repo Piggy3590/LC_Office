@@ -7,6 +7,7 @@ using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.AI;
 using UnityEngine.Animations.Rigging;
+using UnityEngine.InputSystem.HID;
 
 namespace LCOffice.Patches
 {
@@ -162,6 +163,12 @@ namespace LCOffice.Patches
 
         private IEnumerator DogSatisfied()
         {
+            this.canBeMoved = false;
+            if (!isKillingPlayer)
+            {
+                this.mainAudio.PlayOneShot(Plugin.dogSatisfied);
+                creatureAnimator.SetTrigger("PlayBow");
+            }
             yield return new WaitForSeconds(2f);
             this.canBeMoved = true;
             isNetworkTargetPlayer.Value = false;
@@ -188,7 +195,10 @@ namespace LCOffice.Patches
             {
                 this.EatItem();
             }
-            this.CheckTargetAvailable();
+            if (!isSatisfied)
+            {
+                CheckTargetAvailable();
+            }
             if (isHitted.Value)
             {
                 base.StartCoroutine(this.stunnedTimer(networkTargetPlayer.Value.GetPlayerController()));
@@ -210,8 +220,6 @@ namespace LCOffice.Patches
             bool flag6 = this.satisfyValue >= 21f && !this.isSatisfied;
             if (flag6)
             {
-                this.mainAudio.PlayOneShot(Plugin.dogSneeze);
-                this.canBeMoved = false;
                 base.StartCoroutine(this.DogSatisfied());
                 this.isSatisfied = true;
             }
@@ -287,12 +295,12 @@ namespace LCOffice.Patches
                 if (this.timeSinceLookingAtNoise < 2f && this.scaredBackingAway <= 0f && !isNetworkTargetPlayer.Value && !this.isSatisfied)
                 {
                     this.lookRig.weight = Mathf.Lerp(this.lookRig.weight, 1f, Time.deltaTime);
-                    this.lookTarget.position = Vector3.Lerp(this.lookTarget.position, this.lookAtNoise, 10f * Time.deltaTime);
+                    this.lookTarget.position = Vector3.Lerp(this.lookTarget.position, this.lookAtNoise, 10f * Time.deltaTime * 10f);
                     if (base.IsOwner)
                     {
                         Vector3 lookDirection = lookTarget.position - this.transform.position;
                         lookDirection.Normalize();
-                        this.transform.rotation = Quaternion.Slerp(this.transform.rotation, Quaternion.LookRotation(lookDirection), 3 * Time.deltaTime);
+                        this.transform.rotation = Quaternion.Slerp(this.transform.rotation, Quaternion.LookRotation(lookDirection), 8 * Time.deltaTime);
                     }
                 }
                 else
@@ -388,26 +396,23 @@ namespace LCOffice.Patches
                 }
             }
             this.creatureAnimator.SetBool("DogRandomWalk", this.dogRandomWalk);
-            bool flag29 = this.canBeMoved && !this.isRunning;
-            if (flag29)
+            if (!isRunning)
             {
-                this.creatureAnimator.SetBool("Running", false);
-                this.agent.speed = 5.5f;
-                this.agent.acceleration = 7f;
-                this.agent.angularSpeed = 150f;
-            }
-            else
-            {
-                bool flag30 = !this.canBeMoved && !this.isRunning;
-                if (flag30)
+                if (canBeMoved)
                 {
-                    this.creatureAnimator.SetBool("Running", false);
-                    this.agent.speed = 0f;
-                    this.agent.angularSpeed = 0f;
+                    creatureAnimator.SetBool("Running", false);
+                    agent.speed = 5.5f;
+                    agent.acceleration = 7f;
+                    agent.angularSpeed = 150f;
+                }
+                else
+                {
+                    creatureAnimator.SetBool("Running", false);
+                    agent.speed = 0f;
+                    agent.angularSpeed = 0f;
                 }
             }
-            bool flag31 = this.isRunning;
-            if (flag31)
+            else
             {
                 this.creatureAnimator.SetBool("Running", true);
                 this.agent.speed = Mathf.Lerp(this.agent.speed, 15f, Time.deltaTime * 2f);
@@ -541,16 +546,11 @@ namespace LCOffice.Patches
                 }
                 else
                 {
-                    bool flag8 = ShrimpAI.hungerValue.Value < 63f && ShrimpAI.hungerValue.Value > 60f && this.isEnraging;
-                    if (flag8)
+                    if (hungerValue.Value < 63f && hungerValue.Value > 60f && isEnraging)
                     {
                         this.voiceAudio.pitch = Mathf.Lerp(this.voiceAudio.pitch, 1f, 45f * Time.deltaTime);
                         this.voiceAudio.volume = Mathf.Lerp(this.voiceAudio.volume, 1f, 125f * Time.deltaTime);
                         bool flag9 = !this.isNearestItem;
-                        if (flag9)
-                        {
-                            this.canBeMoved = false;
-                        }
                     }
                     else
                     {
@@ -603,8 +603,7 @@ namespace LCOffice.Patches
             {
                 this.isEnraging = false;
                 this.isAngered = false;
-                bool flag16 = !this.isNearestItem && !this.isKillingPlayer && this.stunNormalizedTimer <= 0f;
-                if (flag16)
+                if (!this.isNearestItem && !this.isKillingPlayer && this.stunNormalizedTimer <= 0f && !isSatisfied)
                 {
                     this.canBeMoved = true;
                 }
@@ -644,8 +643,7 @@ namespace LCOffice.Patches
                     }
                 }
             }
-            bool flag22 = this.isKillingPlayer;
-            if (flag22)
+            if (isKillingPlayer)
             {
                 this.canBeMoved = false;
             }

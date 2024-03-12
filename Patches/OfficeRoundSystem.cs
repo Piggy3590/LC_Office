@@ -57,7 +57,6 @@ namespace LCOffice.Patches
         {
             if (!this.isChecked && TimeOfDay.Instance.currentDayTimeStarted && RoundManager.Instance.dungeonGenerator != null)
             {
-                Plugin.mls.LogInfo(playerScreenAnimator.GetBool("rotateLoop"));
                 if (RoundManager.Instance.dungeonGenerator.Generator.DungeonFlow.name == "OfficeDungeonFlow")
                 {
                     isOffice = true;

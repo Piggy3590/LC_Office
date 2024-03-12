@@ -34,7 +34,7 @@ namespace LCOffice
     {
         private const string modGUID = "Piggy.LCOffice";
         private const string modName = "LCOffice";
-        private const string modVersion = "1.1.0";
+        private const string modVersion = "1.1.14";
 
         private readonly Harmony harmony = new Harmony(modGUID);
 
@@ -75,6 +75,7 @@ namespace LCOffice
 
         public static AudioClip eatenExplode;
         public static AudioClip dogSneeze;
+        public static AudioClip dogSatisfied;
 
         public static GameObject shrimpPrefab;
         public static GameObject elevatorManager;
@@ -99,8 +100,8 @@ namespace LCOffice
         public static TerminalNode shrimpTerminalNode;
         public static TerminalKeyword shrimpTerminalKeyword;
 
-        public static TerminalNode haltFile;
-        public static TerminalKeyword haltTK;
+        //public static TerminalNode haltFile;
+        //public static TerminalKeyword haltTK;
 
         public static Item coinItem;
         public static GameObject coinPrefab;
@@ -149,8 +150,13 @@ namespace LCOffice
         private ConfigEntry<bool> configEnableScraps;
 
         public static bool setKorean;
-        public static bool configForceHalt;
+        public static int configHaltPropability;
+        public static bool configDisableCameraShake;
+        public static bool configDiversityHaltBrighness;
         public static float musicVolume;
+
+        public static bool cameraDisable;
+        public static int cameraFrameSpeed;
 
         public static Item bottleItem;
         public static Item goldencupItem;
@@ -159,7 +165,7 @@ namespace LCOffice
         public static ItemGroup itemGroupTabletop;
         public static ItemGroup itemGroupSmall;
 
-
+        public static bool diversityIntergrated;
         void Awake()
         {
             if (Instance == null)
@@ -189,14 +195,19 @@ namespace LCOffice
                 this.configOfficeRarity = base.Config.Bind<int>("General", "OfficeRarity", 40, new ConfigDescription("How rare it is for the office to be chosen. Higher values increases the chance of spawning the office.", new AcceptableValueRange<int>(0, 300), Array.Empty<object>()));
                 this.configGuaranteedOffice = base.Config.Bind<bool>("General", "OfficeGuaranteed", false, new ConfigDescription("If enabled, the office will be effectively guaranteed to spawn. Only recommended for debugging/sightseeing purposes.", null, Array.Empty<object>()));
                 this.configMoons = base.Config.Bind<string>("General", "OfficeMoonsList", "free", new ConfigDescription("The moon(s) that the office can spawn on, in the form of a comma separated list of selectable level names (e.g. \"TitanLevel,RendLevel,DineLevel\")\nNOTE: These must be the internal data names of the levels (all vanilla moons are \"MoonnameLevel\", for modded moon support you will have to find their name if it doesn't follow the convention).\nThe following strings: \"all\", \"vanilla\", \"modded\", \"paid\", \"free\", \"none\" are dynamic presets which add the dungeon to that specified group (string must only contain one of these, or a manual moon name list).\nDefault dungeon generation size is balanced around the dungeon scale multiplier of Titan (2.35), moons with significantly different dungeon size multipliers (see Lethal Company wiki for values) may result in dungeons that are extremely small/large.", null, Array.Empty<object>()));
-                this.configLengthOverride = base.Config.Bind<int>("General", "OfficeLengthOverride", -1, new ConfigDescription(string.Format("If not -1, overrides the office length to whatever you'd like. Adjusts how long/large the dungeon generates.\nBe *EXTREMELY* careful not to set this too high (anything too big on a moon with a high dungeon size multipier can cause catastrophic problems, like crashing your computer or worse)\nFor reference, the default value for the current version [{0}] is {1}. If it's too big, make this lower e.g. 6, if it's too small use something like 10 (or higher, but don't go too crazy with it).", "1.0.4", officeDungeonFlow.Length.Min), null, Array.Empty<object>()));
+                this.configLengthOverride = base.Config.Bind<int>("General", "OfficeLengthOverride", -1, new ConfigDescription(string.Format("If not -1, overrides the office length to whatever you'd like. Adjusts how long/large the dungeon generates.\nBe *EXTREMELY* careful not to set this too high (anything too big on a moon with a high dungeon size multipier can cause catastrophic problems, like crashing your computer or worse)\nFor reference, the default value for the current version [{0}] is {1}. If it's too big, make this lower e.g. 6, if it's too small use something like 10 (or higher, but don't go too crazy with it).", "1.1.2", officeDungeonFlow.Length.Min), null, Array.Empty<object>()));
 
                 this.configEnableScraps = base.Config.Bind<bool>("General", "OfficeCustomScrap", true, new ConfigDescription("When enabled, enables custom scrap spawning.", null, Array.Empty<object>()));
 
                 musicVolume = (float)base.Config.Bind<float>("General", "ElevatorMusicVolume", 100, "Set the volume of music played in the elevator. (0 - 100)").Value;
+                configDisableCameraShake = (bool)base.Config.Bind<bool>("General", "DisableCameraShake", false, "Turn off custom camera shake.").Value;
+                configDiversityHaltBrighness = (bool)base.Config.Bind<bool>("General", "DiversityHaltBrighness", true, "Increase brightness when encountering Halt if Diversity mode is detected.").Value;
+
+                cameraDisable = (bool)base.Config.Bind<bool>("General", "Disable Camera", false, "Disable cameras inside the office.").Value;
+                cameraFrameSpeed = (int)base.Config.Bind<int>("General", "Camera Frame Speed", 20, "Specifies the camera speed inside the office. If it is over 100, it changes to real-time capture. (FPS)").Value;
 
                 this.shrimpSpawnWeight = base.Config.Bind<int>("Spawn", "ShrimpSpawnWeight", 5, new ConfigDescription("Sets the shrimp spawn weight for every moons.", null, Array.Empty<object>()));
-                configForceHalt = (bool)base.Config.Bind<bool>("Spawn", "ForceSpawnHalt", false, "Force Halt to spawn in long hallways (maximum 1 hallway). If two or more long hallways are generated, one random hallway will be assigned.").Value;
+                configHaltPropability = (int)base.Config.Bind<int>("Spawn", "HaltSpawnPropability", 12, "Sets the halt spawn propability for office interior. (0 - 100)").Value;
                 //this.shrimpSpawnWeight = base.Config.Bind<string>("Spawn", "ShrimpSpawnWeight", "0,1,1,2,1,5,6,8", new ConfigDescription("Set the shrimp spawn weight for each moon. In this order:\n(experimentation, assurance, vow, march, offense, rend, dine, titan).", null, Array.Empty<object>()));
                 //this.shrimpModdedSpawnWeight = base.Config.Bind<int>("Spawn", "ShrimpModdedMoonSpawnWeight", 5, new ConfigDescription("Set the shrimp spawn weight for modded moon. ", null, Array.Empty<object>()));
 
@@ -362,14 +373,15 @@ namespace LCOffice
 
                 eatenExplode = Bundle.LoadAsset<AudioClip>("eatenExplode.ogg");
                 dogSneeze = Bundle.LoadAsset<AudioClip>("Sneeze.ogg");
+                dogSatisfied = Bundle.LoadAsset<AudioClip>("DogSatisfied.wav");
 
                 stanleyVoiceline1 = Bundle.LoadAsset<AudioClip>("stanley.ogg");
 
                 shrimpTerminalNode = Bundle.LoadAsset<TerminalNode>("ShrimpFile.asset");
                 shrimpTerminalKeyword = Bundle.LoadAsset<TerminalKeyword>("shrimpTK.asset");
 
-                haltFile = Bundle.LoadAsset<TerminalNode>("haltFile.asset");
-                haltTK = Bundle.LoadAsset<TerminalKeyword>("haltTK.asset");
+                //haltFile = Bundle.LoadAsset<TerminalNode>("haltFile.asset");
+                //haltTK = Bundle.LoadAsset<TerminalKeyword>("haltTK.asset");
 
                 //Items
                 /*
@@ -426,20 +438,22 @@ namespace LCOffice
                     shrimpTerminalNode.displayText = "Shrimp\r\n\r\nSigurd’s Danger Level: 60%\r\n\r\n\nScientific name: Canispiritus-Artemus\r\n\r\nShrimps are dog-like creatures, known to be the first tenant of the Upturned Inn. For the most part, he is relatively friendly to humans, following them around, curiously stalking them. Unfortunately, their passive temperament comes with a dangerously vicious hunger.\r\nDue to the nature of their biology, he has a much more unique stomach organ than most other creatures. The stomach lining is flexible, yet hardy, allowing a Shrimp to digest and absorb the nutrients from anything, biological or not, so long as it isn’t too large.\r\n\r\nHowever, this evolutionary adaptation was most likely a result of their naturally rapid metabolism. He uses nutrients so quickly that he needs to eat multiple meals a day to survive. The time between these meals are inconsistent, as the rate of caloric consumption is variable. This can range from hours to even minutes and causes the shrimp to behave monstrously if he has not eaten for a while.\r\n\r\nKnown to live in abandoned buildings, shrimp can often be seen in large abandoned factories or offices scavenging for scrap metal, to eat. That isn’t to say he can’t be found elsewhere. He is usually a lone hunters and expert trackers out of necessity.\r\n\r\nSigurd’s Note:\r\nIf this guy spots you, you’ll want to drop something you’re holding and let him eat it. It’s either you or that piece of scrap on you.\r\n\r\nit’s best to avoid letting him spot you. I swear… it’s almost like his eyes are staring into your soul.\r\nI never want to see one of these guys behind me again.\r\n\r\n\r\nIK: <i>Sir, don't be sad! Shrimp didn't hate you.\r\nhe was just... hungry.</i>\r\n\r\n";
                     shrimpTerminalNode.creatureName = "Shrimp";
                     shrimpTerminalKeyword.word = "shrimp";
-
+                    /*
                     haltFile.displayText = "Halt\r\n\r\nSigurd’s Danger Level: 40%\r\n\r\n\r\nHalt takes an appearance as a large translucent blue ghost, with illuminating, glowing cyan eyes and a static aura. Its ghostly body has a waveform scale and a visible opening at the bottom.\r\n\r\n\r\nHalt mainly lives in long hallways and has no way of identifying its target until it enters the hallway. If the target enters Halt's hallway, the target will hallucinate and the hallway will feel much longer.\r\nHalt moves slowly towards his target and attempts to kill him. If the target is close enough, Halt will damage the target and send it back to the center of the hallway.\r\n\r\nOften Halt will stop the chase and resume the chase in the opposite direction of the hallway. At this point, the suit's HUD will display the message \"TURN AROUND.\"\r\nIf the target reaches the end of the hallway, all of Halt's attacks stop.\r\n\r\nNothing is known about how Halt attacks.\r\n";
                     haltFile.creatureName = "Halt";
                     haltTK.word = "halt";
+                    */
                 }
                 else
                 {
                     shrimpTerminalNode.displayText = "쉬림프\r\n\r\n시구르드의 위험 수준: 60%\r\n\r\n\n학명: 카니스피리투스-아르테무스\r\n\r\n쉬림프는 개를 닮은 생명체로 Upturned Inn의 첫 번째 세입자로 알려져 있습니다. 평소에는 상대적으로 우호적이며, 호기심을 가지고 인간을 따라다닙니다. 불행하게도 그는 위험할 정도로 굉장한 식욕을 가지고 있습니다.\r\n생물학적 특성으로 인해, 그는 대부분의 다른 생물보다 훨씬 더 독특한 위장 기관을 가지고 있습니다. 위 내막은 유연하면서도 견고하기 때문에 어떤 물체라도 영양분을 소화하고 흡수할 수 있습니다.\r\n그러나 이러한 진화적 적응은 자연적으로 빠른 신진대사의 결과일 가능성이 높습니다. 그는 영양분을 너무 빨리 사용하기 때문에 생존하려면 하루에 여러 끼를 먹어야 합니다.\r\n칼로리 소비율이 다양하기 때문에 식사 사이의 시간이 일정하지 않습니다. 이는 몇 시간에서 몇 분까지 지속될 수 있으며, 쉬림프가 오랫동안 무언가를 먹지 않으면 매우 포악해지며 따라다니던 사람을 쫒습니다.\r\n\r\n버려진 건물에 사는 것으로 알려진 쉬림프는 버려진 공장이나 사무실에서 폐철물을 찾아다니는 것으로 발견할 수 있습니다. 그렇다고 다른 곳에서 그를 찾을 수 없다는 말은 아닙니다. 그는 일반적으로 고독한 사냥꾼이며, 때로는 전문적인 추적자가 되기도 합니다.\r\n\r\n시구르드의 노트: 이 녀석이 으르렁거리는 소리를 듣게 된다면, 먹이를 줄 수 있는 무언가를 가지고 있기를 바라세요. 아니면 당신이 이 녀석의 식사가 될 거예요.\r\n맹세컨대... 마치 당신의 영혼을 들여다보는 것 같아요. 다시는 내 뒤에서 이 녀석을 보고 싶지 않아요.\r\n\r\n\r\nIK: <i>손님, 슬퍼하지 마세요! 쉬림프는 당신을 싫어하지 않는답니다.\r\n걔는 그냥... 배고플 뿐이에요.</i>\r\n\r\n";
                     shrimpTerminalNode.creatureName = "쉬림프";
                     shrimpTerminalKeyword.word = "쉬림프";
-
+                    /*
                     haltFile.displayText = "홀트\r\n\r\n시구르드의 위험 수준: 40%\r\n\r\n홀트는 빛을 발하는 청록색 눈과 정적인 분위기를 풍기는 커다란 반투명 파란색 유령의 형상을 가진 생명체입니다. \r\n\r\n주로 긴 복도에 서식하는 홀트는 목표물이 직접 복도에 들어서기 전까지는 파악할 방법이 없습니다. 만약 목표물이 홀트의 복도에 진입한다면 목표물에게 환각을 일으키며, 이 때 목표물은 복도가 훨씬 길게 느껴지게 됩니다.\r\n\r\n홀트는 목표물을 향해 천천히 움직이며 목표물을 처치하려고 시도합니다. 만약 목표물과 거리가 충분히 가깝다면 홀트는 목표물에게 피해를 주고 복도의 중앙으로 돌려보냅니다.\r\n종종 홀트는 추격을 멈추고 복도의 반대 방향에서 다시 추격하기도 합니다. 이 때 슈트의 HUD에서 \"TURN AROUND\"라는 메시지가 표시됩니다.\r\n만약 목표물이 복도의 끝에 다다른다면 홀트의 모든 공격이 멈춥니다.\r\n\r\n홀트이 공격하는 방식에 대해서는 알려진 것이 없습니다.";
                     haltFile.creatureName = "홀트";
                     haltTK.word = "홀트";
+                    */
 
                     /*
                     coinItem.itemName = "동전";
@@ -460,7 +474,7 @@ namespace LCOffice
                 }
 
                 LethalLib.Modules.Enemies.RegisterEnemy(shrimpEnemy, shrimpSpawnWeight.Value, Levels.LevelTypes.All, Enemies.SpawnType.Default, shrimpTerminalNode, shrimpTerminalKeyword);
-                LethalLib.Modules.Enemies.RegisterEnemy(haltEnemy, 0, Levels.LevelTypes.All, Enemies.SpawnType.Default, haltFile, haltTK);
+                //LethalLib.Modules.Enemies.RegisterEnemy(haltEnemy, 0, Levels.LevelTypes.All, Enemies.SpawnType.Default, haltFile, haltTK);
                 /*
                 int[] numbers = shrimpSpawnWeight.Value.Split(',').Select(int.Parse).ToArray();
                 LevelTypes[] levelTypes = {
@@ -517,6 +531,14 @@ namespace LCOffice
             }
         }
 
+        void Start()
+        {
+            if (BepInEx.Bootstrap.Chainloader.PluginInfos.Keys.Any(k => k == "Chaos.Diversity"))
+            {
+                mls.LogInfo("LC_Office found Diversity!");
+                diversityIntergrated = true;
+            }
+        }
         /*
         [HarmonyPatch(typeof(LocalPropSet))]
         internal class LocalPropSetPatch

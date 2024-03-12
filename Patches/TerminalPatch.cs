@@ -17,9 +17,9 @@ namespace LCOffice.Patches
         private static void Start_Prefix(Terminal __instance, ref List<TerminalNode> ___enemyFiles)
         {
             ___enemyFiles.Add(Plugin.shrimpTerminalNode);
-            ___enemyFiles.Add(Plugin.haltFile);
             Plugin.shrimpTerminalKeyword.defaultVerb = __instance.terminalNodes.allKeywords.First(x => x.word == "info");
-            Plugin.haltTK.defaultVerb = __instance.terminalNodes.allKeywords.First(x => x.word == "info");
+            //___enemyFiles.Add(Plugin.haltFile);
+            //Plugin.haltTK.defaultVerb = __instance.terminalNodes.allKeywords.First(x => x.word == "info");
         }
     }
 }

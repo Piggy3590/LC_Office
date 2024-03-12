@@ -6,6 +6,7 @@ using LethalNetworkAPI;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -30,9 +31,17 @@ namespace LCOffice.Patches
         public float haltTime;
         public float haltSpeed;
         public static bool isInHaltSequance;
+        public static float fullDarknessIntensity;
 
+        public static LethalClientEvent HaltEnterTriggerEvent = new LethalClientEvent(identifier: "haltEnterTriggerEvent", onReceivedFromClient: HaltEnterTrigger);
+        public static void HaltEnterTrigger(ulong id)
+        {
+            id.GetPlayerController().DropAllHeldItems();
+            id.GetPlayerController().transform.position = GameObject.Find("HaltTeleportPoint").transform.position;
+        }
         void Start()
         {
+            isInHaltSequance = false;
             GameObject.Instantiate(Plugin.haltRoom, new Vector3(this.transform.position.x, -500, this.transform.position.z), this.transform.rotation);
             haltEnterTrigger = GameObject.Find("HaltEnterTrigger").GetComponent<InteractTrigger>();
             haltEnterTrigger.onInteract.AddListener(HaltEnterTrigger);
@@ -49,28 +58,37 @@ namespace LCOffice.Patches
             GameObject.Find("HaltEscapeTrigger1").GetComponent<InteractTrigger>().onInteract.AddListener(Teleport1);
             GameObject.Find("HaltEscapeTrigger2").GetComponent<InteractTrigger>().onInteract.AddListener(Teleport2);
             haltTime = UnityEngine.Random.Range(2, 6);
+            fullDarknessIntensity = StartOfRound.Instance.localPlayerController.nightVision.intensity;
         }
 
         public void HaltEnterTrigger(PlayerControllerB playerController)
         {
-            if (!playerController.isCameraDisabled && (UnityEngine.Random.Range(0, 5) == 2 || Plugin.configForceHalt))
+            if (!isInHaltSequance && !playerController.isCameraDisabled && (UnityEngine.Random.Range(0, 101) < Plugin.configHaltPropability))
             {
+                HaltEnterTriggerEvent.InvokeAllClients();
+                OfficeRoundSystem.haltNoiseScreen.SetBool("Noise", true);
+                if (!Plugin.configDisableCameraShake)
+                {
+                    OfficeRoundSystem.playerScreenAnimator.SetBool("rotateLoop", true);
+                }
+                OfficeRoundSystem.haltMusicAudio.clip = Plugin.haltMusic;
+                OfficeRoundSystem.haltMusicAudio.loop = true;
+                OfficeRoundSystem.haltMusicAudio.Play();
+                OfficeRoundSystem.haltMusicAudio.volume = 1;
+                haltAnimator.SetInteger("halt", 1);
                 /*
                 GameObject glitchSound = GameObject.Instantiate(Plugin.glitchSound, playerController.transform.position, playerController.transform.rotation);
                 glitchSound.GetComponent<NetworkObject>().Spawn();
                 StartCoroutine(DestroyObjectDelay(glitchSound));
                 */
-                playerController.DropAllHeldItems(true, false);
-                StartOfRound.Instance.localPlayerController.transform.position = GameObject.Find("HaltTeleportPoint").transform.position;
-                OfficeRoundSystem.haltNoiseScreen.SetBool("Noise", true);
-                OfficeRoundSystem.playerScreenAnimator.SetBool("rotateLoop", true);
-                OfficeRoundSystem.haltMusicAudio.clip = Plugin.haltMusic;
-                OfficeRoundSystem.haltMusicAudio.loop = true;
-                OfficeRoundSystem.haltMusicAudio.Play();
-                haltAnimator.SetInteger("halt", 1);
                 //HUDManager.Instance.AttemptScanNewCreature(61);
-                haltEnterTrigger.interactable = false;
                 isInHaltSequance = true;
+                if (Plugin.configDiversityHaltBrighness)
+                {
+                    StartOfRound.Instance.localPlayerController.nightVision.intensity = 600;
+                }
+                haltEnterTrigger.interactable = false;
+                GameObject.Destroy(haltEnterTrigger.gameObject);
             }
         }
 
@@ -78,30 +96,40 @@ namespace LCOffice.Patches
         {
             if (isInHaltSequance)
             {
+                /*
+                float h1Distance = Vector3.Distance(halt1Pos.position, StartOfRound.Instance.localPlayerController.transform.position);
+                float h2distance = Vector3.Distance(halt2Pos.position, StartOfRound.Instance.localPlayerController.transform.position);
+                Plugin.mls.LogInfo("halt1Distance: " + h1Distance + " halt2Distance: " + h2distance);
+                */
+                StartOfRound.Instance.localPlayerController.sprintMeter += Time.deltaTime * 0.2f;
                 fogContainer.position = StartOfRound.Instance.localPlayerController.transform.position;
-                Plugin.mls.LogInfo(Vector3.Distance(halt1Pos.position, StartOfRound.Instance.localPlayerController.transform.position) + "is one, two is " +
-                    Vector3.Distance(halt2Pos.position, StartOfRound.Instance.localPlayerController.transform.position));
                 if (StartOfRound.Instance.localPlayerController.isPlayerDead)
                 {
                     OfficeRoundSystem.haltMusicAudio.Stop();
                     OfficeRoundSystem.playerScreenAnimator.SetBool("rotateLoop", false);
-                    haltLocalTimer = 0;
+                    OfficeRoundSystem.haltMusicAudio.volume = 0;
                     halt1.GetComponent<AudioSource>().volume = 0;
                     halt2.GetComponent<AudioSource>().volume = 0;
                     isInHaltSequance = false;
+                    haltLocalTimer = 0;
+                    haltTimer = 0;
+                    StartOfRound.Instance.localPlayerController.nightVision.intensity = fullDarknessIntensity;
                 }
                 haltSpeed += Time.deltaTime;
-                haltAnimator.SetFloat("speed", 1f + (haltSpeed * 0.02f));
+                if (haltAnimator.GetFloat("speed") < 2f)
+                {
+                    haltAnimator.SetFloat("speed", 1f + (haltSpeed * 0.02f));
+                }
                 halt1.GetComponent<AudioSource>().volume = 1;
                 halt2.GetComponent<AudioSource>().volume = 1;
                 haltLocalTimer += Time.deltaTime;
+                haltTimer += Time.deltaTime;
                 if (haltLocalTimer > 2)
                 {
                     OfficeRoundSystem.haltNoiseScreen.SetBool("Noise", false);
                 }
                 if (haltAnimator.GetInteger("halt") == 1)
                 {
-                    Plugin.mls.LogInfo(haltLocalTimer + ", " + haltTime);
                     float distance = Vector3.Distance(halt1Pos.position, StartOfRound.Instance.localPlayerController.transform.position);
                     float halt2Distance = Vector3.Distance(halt2Pos.position, StartOfRound.Instance.localPlayerController.transform.position);
                     if (haltLocalTimer == 0)
@@ -115,7 +143,7 @@ namespace LCOffice.Patches
                             haltAnimator.transform.position = new Vector3(haltAnimator.transform.position.x, haltAnimator.transform.position.y, 0);
                         }
                     }
-                    if ((haltLocalTimer > haltTime + (0.1f * (10 + distance)) && halt2Distance > 2.5f) || distance > 50)
+                    if (haltLocalTimer > haltTime + (0.01f * (100 - distance * 2) + (haltTimer * 0.02f)) && halt2Distance > 4f)
                     {
                         OfficeRoundSystem.haltNoiseScreen.SetTrigger("TurnBack");
                         int randomNoise = UnityEngine.Random.Range(0, 4);
@@ -133,8 +161,21 @@ namespace LCOffice.Patches
                             OfficeRoundSystem.haltMusicAudio.PlayOneShot(Plugin.haltNoise4);
                         }
                         haltAnimator.SetInteger("halt", 2);
-                        haltTime = UnityEngine.Random.Range(1, 5);
-                        haltLocalTimer = 0;
+                        if (haltTimer > 10)
+                        {
+                            if (halt2Distance < 20)
+                            {
+                                haltTime = UnityEngine.Random.Range(2, 8);
+                            }
+                            else if (halt2Distance > 20)
+                            {
+                                haltTime = UnityEngine.Random.Range(4, 11);
+                            }
+                        }else
+                        {
+                            haltTime = UnityEngine.Random.Range(3, 7);
+                        }
+                         haltLocalTimer = 0;
                     }
                 }else if (haltAnimator.GetInteger("halt") == 2)
                 {
@@ -151,7 +192,7 @@ namespace LCOffice.Patches
                             haltAnimator.transform.position = new Vector3(haltAnimator.transform.position.x, haltAnimator.transform.position.y, 0);
                         }
                     }
-                    if ((haltLocalTimer > haltTime + (0.1f * (10 + distance)) && halt1Distance > 2.5f) || distance > 50)
+                    if (haltLocalTimer > haltTime + (0.1f * (100 - distance * 2) + (haltTimer * 0.02f)) && halt1Distance > 4f)
                     {
                         int randomNoise = UnityEngine.Random.Range(0, 4);
                         OfficeRoundSystem.haltNoiseScreen.SetTrigger("TurnBack");
@@ -172,10 +213,28 @@ namespace LCOffice.Patches
                             OfficeRoundSystem.haltMusicAudio.PlayOneShot(Plugin.haltNoise4);
                         }
                         haltAnimator.SetInteger("halt", 1);
-                        haltTime = UnityEngine.Random.Range(1, 5);
+                        if (haltTimer > 10)
+                        {
+                            if (halt1Distance < 20)
+                            {
+                                haltTime = UnityEngine.Random.Range(2, 8);
+                            }
+                            else if (halt1Distance > 20)
+                            {
+                                haltTime = UnityEngine.Random.Range(4, 11);
+                            }
+                        }
+                        else
+                        {
+                            haltTime = UnityEngine.Random.Range(3, 7);
+                        }
                         haltLocalTimer = 0;
                     }
                 }
+            }else
+            {
+                halt1.GetComponent<AudioSource>().volume = 0;
+                halt2.GetComponent<AudioSource>().volume = 0;
             }
         }
 
@@ -211,6 +270,7 @@ namespace LCOffice.Patches
             isInHaltSequance = false;
             OfficeRoundSystem.haltNoiseScreen.SetTrigger("NoiseOnce");
             playerController.transform.position = GameObject.Find("TP1").transform.position;
+            StartOfRound.Instance.localPlayerController.nightVision.intensity = fullDarknessIntensity;
         }
 
         public void Teleport2(PlayerControllerB playerController)
@@ -218,7 +278,7 @@ namespace LCOffice.Patches
             OfficeRoundSystem.haltMusicAudio.Stop();
             OfficeRoundSystem.playerScreenAnimator.SetBool("rotateLoop", false);
             haltLocalTimer = 0;
-            int randomNoise = UnityEngine.Random.Range(0, 4);
+            int randomNoise = UnityEngine.Random.Range(2, 8);
             if (randomNoise == 0)
             {
                 OfficeRoundSystem.haltMusicAudio.PlayOneShot(Plugin.haltNoise1);
@@ -240,6 +300,7 @@ namespace LCOffice.Patches
             isInHaltSequance = false;
             OfficeRoundSystem.haltNoiseScreen.SetTrigger("NoiseOnce");
             playerController.transform.position = GameObject.Find("TP2").transform.position;
+            StartOfRound.Instance.localPlayerController.nightVision.intensity = fullDarknessIntensity;
         }
 
         public IEnumerator HaltTouchTriggerCoroutine(PlayerControllerB playerWhoHit)
@@ -279,6 +340,19 @@ namespace LCOffice.Patches
             yield return new WaitForSeconds(1.5f);
             GameObject.Destroy(objectToDestroy);
             yield break;
+        }
+
+        void OnDestroy()
+        {
+            OfficeRoundSystem.haltMusicAudio.Stop();
+            OfficeRoundSystem.playerScreenAnimator.SetBool("rotateLoop", false);
+            OfficeRoundSystem.haltMusicAudio.volume = 0;
+            halt1.GetComponent<AudioSource>().volume = 0;
+            halt2.GetComponent<AudioSource>().volume = 0;
+            isInHaltSequance = false;
+            haltLocalTimer = 0;
+            haltTimer = 0;
+            StartOfRound.Instance.localPlayerController.nightVision.intensity = fullDarknessIntensity;
         }
     }
 }
