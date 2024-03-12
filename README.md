@@ -1,9 +1,9 @@
 # LC_Office
 
 # Before reporting a bug
-- Dungeon generation desynchronization (dungeons are created on different hosts and clients) is an LLL issue.
+- Dungeon generation desynchronization (dungeons are created on different hosts and clients) is not a issue with this mod (highly likely a bug in LLL).
 - Make sure you have the latest version of the mod, and if not, check the Changelog to see if the bug has been fixed! *(Although you don't have to)*
-- Other desync issues (elevator, creatures, etc.) are issues with my mod! If you find it, please report it!
+- Other desync issues (elevator, creatures, etc.) are issues with this mod! If you find it, please report it!
 - Of course, other bug reports are also welcome!
 
 ![Preview3](https://i.imgur.com/H6bvwwj.png)
