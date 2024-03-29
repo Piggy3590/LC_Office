@@ -27,50 +27,50 @@ namespace LCOffice.Patches
             hungerValue.Value = 0f;
             isHitted.Value = false;
             base.transform.GetChild(0).GetComponent<EnemyAICollisionDetect>().mainScript = this;
-            this.enemyType = Plugin.shrimpEnemy;
-            this.skinnedMeshRenderers = base.gameObject.GetComponentsInChildren<SkinnedMeshRenderer>();
-            this.meshRenderers = base.gameObject.GetComponentsInChildren<MeshRenderer>();
-            this.thisNetworkObject = base.gameObject.GetComponentInChildren<NetworkObject>();
-            this.serverPosition = base.transform.position;
-            this.thisEnemyIndex = RoundManager.Instance.numberOfEnemiesInScene;
+            enemyType = Plugin.shrimpEnemy;
+            skinnedMeshRenderers = base.gameObject.GetComponentsInChildren<SkinnedMeshRenderer>();
+            meshRenderers = base.gameObject.GetComponentsInChildren<MeshRenderer>();
+            thisNetworkObject = base.gameObject.GetComponentInChildren<NetworkObject>();
+            serverPosition = base.transform.position;
+            thisEnemyIndex = RoundManager.Instance.numberOfEnemiesInScene;
             RoundManager.Instance.numberOfEnemiesInScene++;
-            this.allAINodes = GameObject.FindGameObjectsWithTag("AINode");
-            this.path1 = new NavMeshPath();
-            this.mouth = GameObject.Find("ShrimpMouth").transform;
-            this.leftEye = GameObject.Find("ShrimpLeftEye").transform;
-            this.rightEye = GameObject.Find("ShrimpRightEye").transform;
-            this.shrimpKillTrigger = GameObject.Find("ShrimpKillTrigger");
-            this.creatureAnimator = base.transform.GetChild(0).GetChild(1).gameObject.GetComponent<Animator>();
-            this.creatureAnimator.SetTrigger("Walk");
-            this.mainAudio = GameObject.Find("ShrimpMainAudio").GetComponent<AudioSource>();
-            this.voiceAudio = GameObject.Find("ShrimpGrowlAudio").GetComponent<AudioSource>();
-            this.voice2Audio = GameObject.Find("ShrimpAngerAudio").GetComponent<AudioSource>();
-            this.lookRig = GameObject.Find("ShrimpLookAtPlayer").GetComponent<Rig>();
-            this.lungLight = GameObject.Find("LungFlash").GetComponent<Light>();
-            this.lungLight.intensity = 0f;
+            allAINodes = GameObject.FindGameObjectsWithTag("AINode");
+            path1 = new NavMeshPath();
+            mouth = GameObject.Find("ShrimpMouth").transform;
+            leftEye = GameObject.Find("ShrimpLeftEye").transform;
+            rightEye = GameObject.Find("ShrimpRightEye").transform;
+            shrimpKillTrigger = GameObject.Find("ShrimpKillTrigger");
+            creatureAnimator = base.transform.GetChild(0).GetChild(1).gameObject.GetComponent<Animator>();
+            creatureAnimator.SetTrigger("Walk");
+            mainAudio = GameObject.Find("ShrimpMainAudio").GetComponent<AudioSource>();
+            voiceAudio = GameObject.Find("ShrimpGrowlAudio").GetComponent<AudioSource>();
+            voice2Audio = GameObject.Find("ShrimpAngerAudio").GetComponent<AudioSource>();
+            lookRig = GameObject.Find("ShrimpLookAtPlayer").GetComponent<Rig>();
+            lungLight = GameObject.Find("LungFlash").GetComponent<Light>();
+            lungLight.intensity = 0f;
             AudioSource[] componentsInChildren = base.transform.GetComponentsInChildren<AudioSource>();
             foreach (AudioSource audioSource in componentsInChildren)
             {
                 audioSource.outputAudioMixerGroup = GameObject.Find("StatusEffectAudio").GetComponent<AudioSource>().outputAudioMixerGroup;
             }
-            this.lookTarget = GameObject.Find("Shrimp_Look_target").transform;
-            this.dogHead = GameObject.Find("ShrimpLookPoint").transform;
-            this.bittenObjectHolder = GameObject.Find("BittenObjectHolder").transform;
-            this.shrimpEye = GameObject.Find("ShrimpEye").transform;
-            this.scaleOfEyesNormally = this.leftEye.localScale;
-            this.originalMouthScale = this.mouth.localScale;
-            this.voice2Audio.clip = Plugin.dogSprint;
-            this.voice2Audio.Play();
-            this.creatureVoice = this.voice2Audio;
-            this.creatureSFX = this.voice2Audio;
-            this.eye = this.shrimpEye;
-            this.SetupBehaviour();
-            this.tempEnemyBehaviourStates.Add(this.roamingState);
-            this.tempEnemyBehaviourStates.Add(this.followingPlayer);
-            this.tempEnemyBehaviourStates.Add(this.enragedState);
-            this.enemyBehaviourStates = this.tempEnemyBehaviourStates.ToArray();
-            this.spawnPosition = base.transform.position;
-            this.roamMap = new AISearchRoutine();
+            lookTarget = GameObject.Find("Shrimp_Look_target").transform;
+            dogHead = GameObject.Find("ShrimpLookPoint").transform;
+            bittenObjectHolder = GameObject.Find("BittenObjectHolder").transform;
+            shrimpEye = GameObject.Find("ShrimpEye").transform;
+            scaleOfEyesNormally = leftEye.localScale;
+            originalMouthScale = mouth.localScale;
+            voice2Audio.clip = Plugin.dogSprint;
+            voice2Audio.Play();
+            creatureVoice = voice2Audio;
+            creatureSFX = voice2Audio;
+            eye = shrimpEye;
+            SetupBehaviour();
+            tempEnemyBehaviourStates.Add(roamingState);
+            tempEnemyBehaviourStates.Add(followingPlayer);
+            tempEnemyBehaviourStates.Add(enragedState);
+            enemyBehaviourStates = tempEnemyBehaviourStates.ToArray();
+            spawnPosition = base.transform.position;
+            roamMap = new AISearchRoutine();
             ItemElevatorCheck[] array2 = UnityEngine.Object.FindObjectsOfType<ItemElevatorCheck>();
             foreach (ItemElevatorCheck itemElevatorCheck in array2)
             {
@@ -93,39 +93,39 @@ namespace LCOffice.Patches
 
         public IEnumerator stunnedTimer(PlayerControllerB playerWhoHit)
         {
-            if (this.scaredBackingAway > 0f)
+            if (scaredBackingAway > 0f)
             {
                 yield break;
             }
             ShrimpAI.isHitted.Value = false;
-            this.hittedPlayer = playerWhoHit;
-            this.agent.speed = 0f;
-            this.creatureAnimator.SetTrigger("Recoil");
-            this.mainAudio.PlayOneShot(Plugin.cry1, 1f);
+            hittedPlayer = playerWhoHit;
+            agent.speed = 0f;
+            creatureAnimator.SetTrigger("Recoil");
+            mainAudio.PlayOneShot(Plugin.cry1, 1f);
             yield return new WaitForSeconds(0.5f);
-            this.scaredBackingAway = 2f;
+            scaredBackingAway = 2f;
             yield return new WaitForSeconds(2f);
-            this.hittedPlayer = null;
+            hittedPlayer = null;
             yield break;
         }
 
         private void StunTest()
         {
-            if (this.scaredBackingAway > 0f)
+            if (scaredBackingAway > 0f)
             {
-                if (this.agent.enabled && base.IsOwner)
+                if (agent.enabled && base.IsOwner)
                 {
-                    this.lookTarget.position = Vector3.Lerp(this.lookTarget.position, base.ChooseFarthestNodeFromPosition(base.transform.position, true, 0, false).position, 10f * Time.deltaTime);
-                    this.agent.SetDestination(base.ChooseFarthestNodeFromPosition(base.transform.position, true, 0, false).position);
+                    lookTarget.position = Vector3.Lerp(lookTarget.position, base.ChooseFarthestNodeFromPosition(base.transform.position, true, 0, false).position, 10f * Time.deltaTime);
+                    agent.SetDestination(base.ChooseFarthestNodeFromPosition(base.transform.position, true, 0, false).position);
                 }
-                this.scaredBackingAway -= Time.deltaTime;
+                scaredBackingAway -= Time.deltaTime;
             }
         }
 
         public override void HitEnemy(int force = 1, PlayerControllerB playerWhoHit = null, bool playHitSFX = false)
         {
             base.HitEnemy(force, playerWhoHit, false);
-            if (ShrimpAI.hungerValue.Value < 60f && this.scaredBackingAway <= 0f)
+            if (ShrimpAI.hungerValue.Value < 60f && scaredBackingAway <= 0f)
             {
                 ShrimpAI.isHitted.Value = true;
             }
@@ -133,28 +133,28 @@ namespace LCOffice.Patches
 
         public void FootStepSound()
         {
-            this.randomVal = (float)UnityEngine.Random.Range(0, 20);
-            if (this.randomVal < 5f)
+            randomVal = UnityEngine.Random.Range(0, 20);
+            if (randomVal < 5f)
             {
-                this.mainAudio.PlayOneShot(Plugin.footstep1, UnityEngine.Random.Range(0.8f, 1f));
+                mainAudio.PlayOneShot(Plugin.footstep1, UnityEngine.Random.Range(0.8f, 1f));
             }
             else
             {
-                if (this.randomVal < 10f)
+                if (randomVal < 10f)
                 {
-                    this.mainAudio.PlayOneShot(Plugin.footstep2, UnityEngine.Random.Range(0.8f, 1f));
+                    mainAudio.PlayOneShot(Plugin.footstep2, UnityEngine.Random.Range(0.8f, 1f));
                 }
                 else
                 {
-                    if (this.randomVal < 15f)
+                    if (randomVal < 15f)
                     {
-                        this.mainAudio.PlayOneShot(Plugin.footstep3, UnityEngine.Random.Range(0.8f, 1f));
+                        mainAudio.PlayOneShot(Plugin.footstep3, UnityEngine.Random.Range(0.8f, 1f));
                     }
                     else
                     {
-                        if (this.randomVal < 20f)
+                        if (randomVal < 20f)
                         {
-                            this.mainAudio.PlayOneShot(Plugin.footstep4, UnityEngine.Random.Range(0.8f, 1f));
+                            mainAudio.PlayOneShot(Plugin.footstep4, UnityEngine.Random.Range(0.8f, 1f));
                         }
                     }
                 }
@@ -163,38 +163,38 @@ namespace LCOffice.Patches
 
         private IEnumerator DogSatisfied()
         {
-            this.canBeMoved = false;
+            canBeMoved = false;
             yield return new WaitForSeconds(1f);
             if (!isKillingPlayer)
             {
-                this.mainAudio.PlayOneShot(Plugin.dogSatisfied);
+                mainAudio.PlayOneShot(Plugin.dogSatisfied);
                 creatureAnimator.SetTrigger("PlayBow");
             }
             yield return new WaitForSeconds(2f);
-            this.canBeMoved = true;
+            canBeMoved = true;
             isNetworkTargetPlayer.Value = false;
             yield break;
         }
 
         public override void Update()
         {
-            this.timeSinceLookingAtNoise += Time.deltaTime;
-            this.footStepTime += Time.deltaTime * shrimpVelocity.Value / 8f;
-            if (this.footStepTime > 0.5f)
+            timeSinceLookingAtNoise += Time.deltaTime;
+            footStepTime += Time.deltaTime * shrimpVelocity.Value / 8f;
+            if (footStepTime > 0.5f)
             {
-                this.FootStepSound();
-                this.footStepTime = 0f;
+                FootStepSound();
+                footStepTime = 0f;
             }
-            if (!this.isSatisfied)
+            if (!isSatisfied)
             {
-                this.CheckPlayer();
+                CheckPlayer();
             }
-            this.creatureAnimator.SetFloat("walkSpeed", Mathf.Clamp(shrimpVelocity.Value / 5f, 0f, 3f));
-            this.creatureAnimator.SetFloat("runSpeed", Mathf.Clamp(shrimpVelocity.Value / 2.7f, 3f, 4f));
-            this.SetByHunger();
+            creatureAnimator.SetFloat("walkSpeed", Mathf.Clamp(shrimpVelocity.Value / 5f, 0f, 3f));
+            creatureAnimator.SetFloat("runSpeed", Mathf.Clamp(shrimpVelocity.Value / 2.7f, 3f, 4f));
+            SetByHunger();
             if (isNetworkTargetPlayer.Value)
             {
-                this.EatItem();
+                EatItem();
             }
             if (!isSatisfied)
             {
@@ -202,10 +202,9 @@ namespace LCOffice.Patches
             }
             if (isHitted.Value)
             {
-                base.StartCoroutine(this.stunnedTimer(networkTargetPlayer.Value.GetPlayerController()));
+                base.StartCoroutine(stunnedTimer(networkTargetPlayer.Value.GetPlayerController()));
             }
-            bool isOwner = base.IsOwner;
-            if (isOwner)
+            if (base.IsOwner)
             {
                 base.SyncPositionToClients();
             }
@@ -213,39 +212,32 @@ namespace LCOffice.Patches
             {
                 base.SetClientCalculatingAI(false);
             }
-            bool flag5 = this.ateLung;
-            if (flag5)
+            if (ateLung)
             {
-                this.lungLight.intensity = Mathf.Lerp(this.lungLight.intensity, 1500f, Time.deltaTime * 10f);
+                lungLight.intensity = Mathf.Lerp(lungLight.intensity, 1500f, Time.deltaTime * 10f);
             }
-            bool flag6 = this.satisfyValue >= 21f && !this.isSatisfied;
-            if (flag6)
+            if (satisfyValue >= 21f && !isSatisfied)
             {
-                base.StartCoroutine(this.DogSatisfied());
-                this.isSatisfied = true;
+                base.StartCoroutine(DogSatisfied());
+                isSatisfied = true;
             }
-            bool flag7 = this.isSatisfied && this.satisfyValue > 0f;
-            if (flag7)
+            if (isSatisfied && satisfyValue > 0f)
             {
-                this.satisfyValue -= Time.deltaTime;
-                this.isSeenPlayer = false;
+                satisfyValue -= Time.deltaTime;
+                isSeenPlayer = false;
             }
-            bool flag8 = this.satisfyValue <= 0f && this.isSatisfied;
-            if (flag8)
+            if (satisfyValue <= 0f && isSatisfied)
             {
-                this.isSatisfied = false;
+                isSatisfied = false;
                 droppedItems.Clear();
-                this.satisfyValue = 0f;
+                satisfyValue = 0f;
             }
-            bool flag9 = !isNetworkTargetPlayer.Value && !this.isNearestItem && this.targetNode == null;
-            if (flag9)
+            if (!isNetworkTargetPlayer.Value && !isNearestItem && targetNode == null)
             {
                 int num = UnityEngine.Random.Range(1, this.allAINodes.Length);
-                bool flag10 = Vector3.Distance(base.transform.position, this.allAINodes[num].transform.position) > 5f && ShrimpAI.SelectNode.Value != num && base.IsOwner;
-                if (flag10)
+                if (Vector3.Distance(base.transform.position, this.allAINodes[num].transform.position) > 5f && ShrimpAI.SelectNode.Value != num && base.IsOwner)
                 {
-                    bool isOwner2 = base.IsOwner;
-                    if (isOwner2)
+                    if (base.IsOwner)
                     {
                         ShrimpAI.SelectNode.Value = num;
                     }
@@ -253,82 +245,74 @@ namespace LCOffice.Patches
             }
             else
             {
-                bool flag11 = !isNetworkTargetPlayer.Value && !this.isNearestItem && this.targetNode != null;
-                if (flag11)
+                if (!isNetworkTargetPlayer.Value && !isNearestItem && targetNode != null)
                 {
-                    int num2 = UnityEngine.Random.Range(1, this.allAINodes.Length);
-                    bool flag12 = Vector3.Distance(base.transform.position, this.allAINodes[ShrimpAI.SelectNode.Value].transform.position) < 1f && ShrimpAI.SelectNode.Value != num2 && base.IsOwner;
-                    if (flag12)
+                    int num2 = UnityEngine.Random.Range(1, allAINodes.Length);
+                    if (Vector3.Distance(base.transform.position, allAINodes[SelectNode.Value].transform.position) < 1f && SelectNode.Value != num2 && base.IsOwner)
                     {
-                        bool isOwner3 = base.IsOwner;
-                        if (isOwner3)
+                        if (base.IsOwner)
                         {
-                            ShrimpAI.SelectNode.Value = num2;
+                            SelectNode.Value = num2;
                         }
                     }
                 }
             }
-            bool flag13 = this.stuckDetectionTimer > 3.5f;
-            if (flag13)
+            if (stuckDetectionTimer > 3.5f)
             {
                 int num3 = UnityEngine.Random.Range(1, this.allAINodes.Length);
-                bool flag14 = Vector3.Distance(base.transform.position, this.allAINodes[num3].transform.position) > 5f && ShrimpAI.SelectNode.Value != num3;
-                if (flag14)
+                if (Vector3.Distance(base.transform.position, this.allAINodes[num3].transform.position) > 5f && ShrimpAI.SelectNode.Value != num3)
                 {
-                    bool isOwner4 = base.IsOwner;
-                    if (isOwner4)
+                    if (base.IsOwner)
                     {
-                        ShrimpAI.SelectNode.Value = num3;
+                        SelectNode.Value = num3;
                     }
-                    this.stuckDetectionTimer = 0f;
+                    stuckDetectionTimer = 0f;
                 }
                 else
                 {
-                    bool flag15 = Vector3.Distance(base.transform.position, this.allAINodes[num3].transform.position) > 5f;
-                    if (flag15)
+                    if (Vector3.Distance(base.transform.position, this.allAINodes[num3].transform.position) > 5f)
                     {
-                        this.stuckDetectionTimer = 0f;
+                        stuckDetectionTimer = 0f;
                     }
                 }
             }
-            if ((!isNetworkTargetPlayer.Value && !this.isNearestItem) || this.isSatisfied)
+            if ((!isNetworkTargetPlayer.Value && !isNearestItem) || isSatisfied)
             {
-                if (this.timeSinceLookingAtNoise < 2f && this.scaredBackingAway <= 0f && !isNetworkTargetPlayer.Value && !this.isSatisfied)
+                if (timeSinceLookingAtNoise < 2f && scaredBackingAway <= 0f && !isNetworkTargetPlayer.Value && !isSatisfied)
                 {
-                    this.lookRig.weight = Mathf.Lerp(this.lookRig.weight, 1f, Time.deltaTime);
-                    this.lookTarget.position = Vector3.Lerp(this.lookTarget.position, this.lookAtNoise, 10f * Time.deltaTime * 10f);
+                    lookRig.weight = Mathf.Lerp(lookRig.weight, 1f, Time.deltaTime);
+                    lookTarget.position = Vector3.Lerp(lookTarget.position, lookAtNoise, 10f * Time.deltaTime * 10f);
                     if (base.IsOwner)
                     {
-                        Vector3 lookDirection = lookTarget.position - this.transform.position;
+                        Vector3 lookDirection = lookTarget.position - transform.position;
                         lookDirection.Normalize();
-                        this.transform.rotation = Quaternion.Slerp(this.transform.rotation, Quaternion.LookRotation(lookDirection), 8 * Time.deltaTime);
+                        transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(lookDirection), 8 * Time.deltaTime);
                     }
                 }
                 else
                 {
                     if (scaredBackingAway <= 0f)
                     {
-                        this.lookRig.weight = Mathf.Lerp(this.lookRig.weight, 0f, Time.deltaTime);
+                        lookRig.weight = Mathf.Lerp(lookRig.weight, 0f, Time.deltaTime);
                     }
                 }
-                if (this.targetNode != null)
+                if (targetNode != null)
                 {
-                    if (this.agent.enabled && base.IsOwner)
+                    if (agent.enabled && base.IsOwner)
                     {
-                        this.agent.SetDestination(this.targetNode.position);
+                        agent.SetDestination(targetNode.position);
                     }
                     if (shrimpVelocity.Value < 0.5f)
                     {
-                        this.stuckDetectionTimer += Time.deltaTime;
+                        stuckDetectionTimer += Time.deltaTime;
                     }
                     else
                     {
-                        this.stuckDetectionTimer = 0f;
+                        stuckDetectionTimer = 0f;
                     }
-                    Vector3 vector = base.transform.position - this.prevPosition;
-                    float num5 = Vector3.Angle(vector, this.agent.velocity.normalized);
-                    bool flag22 = Vector3.Angle(vector, this.agent.velocity.normalized) > 30f;
-                    if (flag22)
+                    Vector3 vector = base.transform.position - prevPosition;
+                    float num5 = Vector3.Angle(vector, agent.velocity.normalized);
+                    if (Vector3.Angle(vector, agent.velocity.normalized) > 30f)
                     {
                         Plugin.mls.LogInfo(string.Concat(new string[]
                         {
@@ -339,64 +323,57 @@ namespace LCOffice.Patches
                             " rad."
                         }));
                     }
-                    this.prevPosition = base.transform.position;
+                    prevPosition = base.transform.position;
                 }
             }
-            this.targetNode = this.allAINodes[ShrimpAI.SelectNode.Value].transform;
-            bool flag23 = isNetworkTargetPlayer.Value || this.isNearestItem;
-            if (flag23)
+            targetNode = allAINodes[ShrimpAI.SelectNode.Value].transform;
+            if (isNetworkTargetPlayer.Value || isNearestItem)
             {
-                this.dogRandomWalk = false;
-                this.stuckDetectionTimer = 0f;
+                dogRandomWalk = false;
+                stuckDetectionTimer = 0f;
             }
-            bool isOwner5 = base.IsOwner;
-            if (isOwner5)
+            if (base.IsOwner)
             {
-                ShrimpAI.networkPosition.Value = base.transform.position;
-                ShrimpAI.networkRotation.Value = base.transform.rotation.eulerAngles;
-                ShrimpAI.shrimpVelocity.Value = this.agent.velocity.sqrMagnitude;
+                networkPosition.Value = base.transform.position;
+                networkRotation.Value = base.transform.rotation.eulerAngles;
+                shrimpVelocity.Value = this.agent.velocity.sqrMagnitude;
             }
             else
             {
-                this.networkPosDistance = Vector3.Distance(base.transform.position, ShrimpAI.networkPosition.Value);
-                bool flag24 = this.networkPosDistance > 3f;
-                if (flag24)
+                this.networkPosDistance = Vector3.Distance(base.transform.position, networkPosition.Value);
+                if (networkPosDistance > 3f)
                 {
-                    base.transform.position = ShrimpAI.networkPosition.Value;
+                    base.transform.position = networkPosition.Value;
                     Plugin.mls.LogWarning("Force the shrimp to change position.");
                 }
                 else
                 {
-                    base.transform.position = Vector3.Lerp(base.transform.position, ShrimpAI.networkPosition.Value, Time.deltaTime * 10f);
+                    base.transform.position = Vector3.Lerp(base.transform.position, networkPosition.Value, Time.deltaTime * 10f);
                 }
-                base.transform.rotation = Quaternion.Euler(Vector3.Lerp(base.transform.rotation.eulerAngles, ShrimpAI.networkRotation.Value, Time.deltaTime * 10f));
-                bool flag25 = this.networkPosDistance > 15f;
-                if (flag25)
+                base.transform.rotation = Quaternion.Euler(Vector3.Lerp(base.transform.rotation.eulerAngles, networkRotation.Value, Time.deltaTime * 10f));
+                if (networkPosDistance > 15f)
                 {
-                    Plugin.mls.LogFatal("Shrimp spawned successfully, but the current position is VERY far from the network position. This error typically occurs when network quality is low or the server is experiencing heavy traffic.");
+                    Plugin.mls.LogFatal("Shrimp's current position is VERY far from the network position. This error typically occurs when network quality is low or the server is experiencing heavy traffic.");
                 }
             }
-            bool flag26 = isNetworkTargetPlayer.Value;
-            if (flag26)
+            if (isNetworkTargetPlayer.Value)
             {
-                this.isTargetAvailable = true;
+                isTargetAvailable = true;
             }
-            bool flag27 = ShrimpAI.hungerValue.Value < 55f;
-            if (flag27)
+            if (hungerValue.Value < 55f)
             {
-                this.leftEye.localScale = Vector3.Lerp(this.leftEye.localScale, this.scaleOfEyesNormally, 20f * Time.deltaTime);
-                this.rightEye.localScale = Vector3.Lerp(this.rightEye.localScale, this.scaleOfEyesNormally, 20f * Time.deltaTime);
+                leftEye.localScale = Vector3.Lerp(leftEye.localScale, scaleOfEyesNormally, 20f * Time.deltaTime);
+                rightEye.localScale = Vector3.Lerp(rightEye.localScale, scaleOfEyesNormally, 20f * Time.deltaTime);
             }
             else
             {
-                bool flag28 = ShrimpAI.hungerValue.Value > 55f;
-                if (flag28)
+                if (hungerValue.Value > 55f)
                 {
-                    this.leftEye.localScale = Vector3.Lerp(this.leftEye.localScale, this.scaleOfEyesNormally * 0.4f, 20f * Time.deltaTime);
-                    this.rightEye.localScale = Vector3.Lerp(this.rightEye.localScale, this.scaleOfEyesNormally * 0.4f, 20f * Time.deltaTime);
+                    leftEye.localScale = Vector3.Lerp(leftEye.localScale, scaleOfEyesNormally * 0.4f, 20f * Time.deltaTime);
+                    rightEye.localScale = Vector3.Lerp(rightEye.localScale, scaleOfEyesNormally * 0.4f, 20f * Time.deltaTime);
                 }
             }
-            this.creatureAnimator.SetBool("DogRandomWalk", this.dogRandomWalk);
+            creatureAnimator.SetBool("DogRandomWalk", dogRandomWalk);
             if (!isRunning)
             {
                 if (canBeMoved)
@@ -415,12 +392,12 @@ namespace LCOffice.Patches
             }
             else
             {
-                this.creatureAnimator.SetBool("Running", true);
-                this.agent.speed = Mathf.Lerp(this.agent.speed, 15f, Time.deltaTime * 2f);
-                this.agent.angularSpeed = 10000f;
-                this.agent.acceleration = 50f;
+                creatureAnimator.SetBool("Running", true);
+                agent.speed = Mathf.Lerp(agent.speed, 15f, Time.deltaTime * 2f);
+                agent.angularSpeed = 10000f;
+                agent.acceleration = 50f;
             }
-            this.StunTest();
+            StunTest();
         }
 
         private IEnumerator SyncRotation()
@@ -440,45 +417,39 @@ namespace LCOffice.Patches
         private void CheckPlayer()
         {
             PlayerControllerB playerControllerB = base.CheckLineOfSightForPlayer(40f, 40, 2);
-            bool flag = playerControllerB != null && !isNetworkTargetPlayer.Value && !this.isKillingPlayer;
-            if (flag)
+            if (playerControllerB != null && !isNetworkTargetPlayer.Value && !isKillingPlayer)
             {
-                bool flag2 = !this.isSeenPlayer;
-                if (flag2)
+                if (!isSeenPlayer)
                 {
-                    this.mainAudio.PlayOneShot(Plugin.dogHowl);
-                    this.creatureAnimator.SetTrigger("Walk");
-                    this.isSeenPlayer = true;
+                    mainAudio.PlayOneShot(Plugin.dogHowl);
+                    creatureAnimator.SetTrigger("Walk");
+                    isSeenPlayer = true;
                 }
-                ShrimpAI.networkTargetPlayer.Value = playerControllerB.GetClientId();
+                networkTargetPlayer.Value = playerControllerB.GetClientId();
                 isNetworkTargetPlayer.Value = true;
             }
-            bool flag3 = this.droppedItems.Count > 0 && this.nearestDroppedItem == null;
-            if (flag3)
+            if (droppedItems.Count > 0 && nearestDroppedItem == null)
             {
-                this.FindNearestItem();
+                FindNearestItem();
             }
             if (isNetworkTargetPlayer.Value)
             {
-                bool flag5 = !this.isNearestItem && this.scaredBackingAway <= 0f;
-                if (flag5)
+                if (!isNearestItem && scaredBackingAway <= 0f)
                 {
-                    bool flag6 = hungerValue.Value > 55f;
-                    if (flag6)
+                    if (hungerValue.Value > 55f)
                     {
-                        this.lookRay = new Ray(this.dogHead.position, ShrimpAI.networkTargetPlayer.Value.GetPlayerController().transform.position - this.dogHead.position);
-                        this.lookTarget.position = Vector3.Lerp(this.lookTarget.position, this.lookRay.GetPoint(3f), 30f * Time.deltaTime);
+                        lookRay = new Ray(dogHead.position, networkTargetPlayer.Value.GetPlayerController().transform.position - dogHead.position);
+                        lookTarget.position = Vector3.Lerp(lookTarget.position, lookRay.GetPoint(3f), 30f * Time.deltaTime);
                     }
                     else
                     {
-                        this.lookTarget.position = Vector3.Lerp(this.lookTarget.position, ShrimpAI.networkTargetPlayer.Value.GetPlayerController().lowerSpine.transform.position, 6f * Time.deltaTime);
+                        lookTarget.position = Vector3.Lerp(lookTarget.position, networkTargetPlayer.Value.GetPlayerController().lowerSpine.transform.position, 6f * Time.deltaTime);
                     }
                 }
-                this.agent.autoBraking = true;
-                this.lookRig.weight = Mathf.Lerp(this.lookRig.weight, 1, Time.deltaTime);
-                this.dogRandomWalk = false;
-                bool flag7 = !this.isSeenPlayer;
-                if (flag7)
+                agent.autoBraking = true;
+                lookRig.weight = Mathf.Lerp(lookRig.weight, 1, Time.deltaTime);
+                dogRandomWalk = false;
+                if (!this.isSeenPlayer)
                 {
                     this.mainAudio.PlayOneShot(Plugin.dogHowl, 1f);
                 }
@@ -492,102 +463,90 @@ namespace LCOffice.Patches
             {
                 this.agent.stoppingDistance = 0.5f;
             }
-            bool flag9 = this.isNearestItem;
-            if (flag9)
-            {
-            }
         }
 
         private void SetByHunger()
         {
-            bool flag = ShrimpAI.hungerValue.Value < 66f;
-            if (flag)
+            if (hungerValue.Value < 66f)
             {
-                bool flag2 = this.isSeenPlayer && !this.isTargetAvailable && base.IsOwner;
-                if (flag2)
+                if (isSeenPlayer && !isTargetAvailable && base.IsOwner)
                 {
-                    ShrimpAI.hungerValue.Value += Time.deltaTime * 0.09f;
+                    hungerValue.Value += Time.deltaTime * 0.09f;
                 }
                 else
                 {
-                    bool flag3 = this.isSeenPlayer && this.isTargetAvailable && base.IsOwner;
-                    if (flag3)
+                    if (isSeenPlayer && isTargetAvailable && base.IsOwner)
                     {
-                        ShrimpAI.hungerValue.Value += Time.deltaTime;
+                        hungerValue.Value += Time.deltaTime;
                     }
                 }
             }
-            bool flag4 = ShrimpAI.hungerValue.Value > 55f && ShrimpAI.hungerValue.Value < 60f;
-            if (flag4)
+            if (hungerValue.Value > 55f && hungerValue.Value < 60f)
             {
-                this.voiceAudio.pitch = Mathf.Lerp(this.voiceAudio.pitch, 1f, 45f * Time.deltaTime);
-                this.voiceAudio.volume = Mathf.Lerp(this.voiceAudio.volume, 1f, 125f * Time.deltaTime);
-                this.voiceAudio.loop = true;
-                this.voiceAudio.clip = Plugin.stomachGrowl;
-                bool flag5 = !this.voiceAudio.isPlaying;
-                if (flag5)
+                voiceAudio.pitch = Mathf.Lerp(voiceAudio.pitch, 1f, 45f * Time.deltaTime);
+                voiceAudio.volume = Mathf.Lerp(voiceAudio.volume, 1f, 125f * Time.deltaTime);
+                voiceAudio.loop = true;
+                voiceAudio.clip = Plugin.stomachGrowl;
+                if (!voiceAudio.isPlaying)
                 {
-                    this.voiceAudio.Play();
+                    voiceAudio.Play();
                 }
             }
             else
             {
-                bool flag6 = ShrimpAI.hungerValue.Value < 63f && ShrimpAI.hungerValue.Value >= 60f && !this.isEnraging;
-                if (flag6)
+                if (hungerValue.Value < 63f && hungerValue.Value >= 60f && !isEnraging)
                 {
-                    this.voiceAudio.pitch = Mathf.Lerp(this.voiceAudio.pitch, 0.8f, 45f * Time.deltaTime);
-                    this.voiceAudio.volume = Mathf.Lerp(this.voiceAudio.volume, 1f, 125f * Time.deltaTime);
-                    this.isEnraging = true;
-                    this.voiceAudio.clip = Plugin.bigGrowl;
-                    bool flag7 = !this.voiceAudio.isPlaying;
-                    if (flag7)
+                    voiceAudio.pitch = Mathf.Lerp(voiceAudio.pitch, 0.8f, 45f * Time.deltaTime);
+                    voiceAudio.volume = Mathf.Lerp(voiceAudio.volume, 1f, 125f * Time.deltaTime);
+                    isEnraging = true;
+                    voiceAudio.clip = Plugin.bigGrowl;
+                    if (!voiceAudio.isPlaying)
                     {
-                        this.voiceAudio.Play();
+                        voiceAudio.Play();
                     }
                 }
                 else
                 {
                     if (hungerValue.Value < 63f && hungerValue.Value > 60f && isEnraging)
                     {
-                        this.voiceAudio.pitch = Mathf.Lerp(this.voiceAudio.pitch, 1f, 45f * Time.deltaTime);
-                        this.voiceAudio.volume = Mathf.Lerp(this.voiceAudio.volume, 1f, 125f * Time.deltaTime);
-                        bool flag9 = !this.isNearestItem;
+                        voiceAudio.pitch = Mathf.Lerp(voiceAudio.pitch, 1f, 45f * Time.deltaTime);
+                        voiceAudio.volume = Mathf.Lerp(voiceAudio.volume, 1f, 125f * Time.deltaTime);
+                        bool flag9 = !isNearestItem;
                     }
                     else
                     {
-                        bool flag10 = ShrimpAI.hungerValue.Value < 55f;
-                        if (flag10)
+                        if (hungerValue.Value < 55f)
                         {
-                            this.voiceAudio.pitch = Mathf.Lerp(this.voiceAudio.pitch, 0f, 45f * Time.deltaTime);
-                            this.voiceAudio.volume = Mathf.Lerp(this.voiceAudio.volume, 0f, 125f * Time.deltaTime);
+                            voiceAudio.pitch = Mathf.Lerp(voiceAudio.pitch, 0f, 45f * Time.deltaTime);
+                            voiceAudio.volume = Mathf.Lerp(voiceAudio.volume, 0f, 125f * Time.deltaTime);
                         }
                         else
                         {
-                            if (hungerValue.Value > 63f && !this.isAngered)
+                            if (hungerValue.Value > 63f && !isAngered)
                             {
-                                if (!this.isNearestItem && !this.isKillingPlayer && this.stunNormalizedTimer <= 0f)
+                                if (!isNearestItem && !isKillingPlayer && stunNormalizedTimer <= 0f)
                                 {
-                                    this.canBeMoved = true;
+                                    canBeMoved = true;
                                 }
-                                this.voiceAudio.clip = Plugin.enragedScream;
-                                this.voiceAudio.Play();
-                                this.isEnraging = false;
-                                this.isAngered = true;
+                                voiceAudio.clip = Plugin.enragedScream;
+                                voiceAudio.Play();
+                                isEnraging = false;
+                                isAngered = true;
                             }
                             else
                             {
                                 if (hungerValue.Value > 65f)
                                 {
-                                    this.openDoorSpeedMultiplier = 1.5f;
-                                    this.isRunning = true;
-                                    this.voice2Audio.volume = Mathf.Lerp(this.voice2Audio.volume, 1f, 125f * Time.deltaTime);
+                                    openDoorSpeedMultiplier = 1.5f;
+                                    isRunning = true;
+                                    voice2Audio.volume = Mathf.Lerp(voice2Audio.volume, 1f, 125f * Time.deltaTime);
                                 }
                                 else
                                 {
                                     if (hungerValue.Value > 63f)
                                     {
-                                        this.voiceAudio.pitch = Mathf.Lerp(this.voiceAudio.pitch, 0.8f, 45f * Time.deltaTime);
-                                        this.mouth.localScale = Vector3.Lerp(this.mouth.localScale, new Vector3(0.005590725f, 0.01034348f, 0.02495567f), 30f * Time.deltaTime);
+                                        voiceAudio.pitch = Mathf.Lerp(voiceAudio.pitch, 0.8f, 45f * Time.deltaTime);
+                                        mouth.localScale = Vector3.Lerp(mouth.localScale, new Vector3(0.005590725f, 0.01034348f, 0.02495567f), 30f * Time.deltaTime);
                                     }
                                 }
                             }
@@ -595,30 +554,27 @@ namespace LCOffice.Patches
                     }
                 }
             }
-            bool flag15 = ShrimpAI.hungerValue.Value < 60f;
-            if (flag15)
+            if (hungerValue.Value < 60f)
             {
-                this.isEnraging = false;
-                this.isAngered = false;
-                if (!this.isNearestItem && !this.isKillingPlayer && this.stunNormalizedTimer <= 0f && !isSatisfied)
+                isEnraging = false;
+                isAngered = false;
+                if (!isNearestItem && !isKillingPlayer && stunNormalizedTimer <= 0f && !isSatisfied)
                 {
-                    this.canBeMoved = true;
+                    canBeMoved = true;
                 }
             }
-            bool flag17 = ShrimpAI.hungerValue.Value < 66f;
-            if (flag17)
+            if (hungerValue.Value < 66f)
             {
-                this.isRunning = false;
-                this.openDoorSpeedMultiplier = 0.3f;
+                isRunning = false;
+                openDoorSpeedMultiplier = 0.3f;
             }
-            bool flag18 = ShrimpAI.hungerValue.Value < 63f;
-            if (flag18)
+            if (hungerValue.Value < 63f)
             {
-                this.mouth.localScale = Vector3.Lerp(this.mouth.localScale, this.originalMouthScale, 20f * Time.deltaTime);
-                this.voice2Audio.volume = Mathf.Lerp(this.voice2Audio.volume, 0f, 125f * Time.deltaTime);
-                this.isRunning = false;
+                mouth.localScale = Vector3.Lerp(mouth.localScale, originalMouthScale, 20f * Time.deltaTime);
+                voice2Audio.volume = Mathf.Lerp(voice2Audio.volume, 0f, 125f * Time.deltaTime);
+                isRunning = false;
             }
-            if (hungerValue.Value > 64f && this.networkTargetPlayerDistance < 2f && !this.isKillingPlayer && isNetworkTargetPlayer.Value)
+            if (hungerValue.Value > 64f && networkTargetPlayerDistance < 2f && !isKillingPlayer && isNetworkTargetPlayer.Value)
             {
                 if (networkTargetPlayer.Value.GetPlayerController().isCameraDisabled)
                 {
@@ -630,7 +586,7 @@ namespace LCOffice.Patches
             {
                 if (!networkTargetPlayer.Value.GetPlayerController().isCameraDisabled)
                 {
-                    base.StartCoroutine(this.KillPlayer(networkTargetPlayer.Value.GetPlayerController()));
+                    base.StartCoroutine(KillPlayer(networkTargetPlayer.Value.GetPlayerController()));
                     Plugin.mls.LogInfo("(Shrimp) Triggering KillPlayer");
                     KillingPlayerBool.Value = false;
                 }
@@ -638,13 +594,13 @@ namespace LCOffice.Patches
                 {
                     if (networkTargetPlayer.Value.GetPlayerController().isCameraDisabled)
                     {
-                        base.StartCoroutine(this.KillPlayerInOtherClient(networkTargetPlayer.Value.GetPlayerController()));
+                        base.StartCoroutine(KillPlayerInOtherClient(networkTargetPlayer.Value.GetPlayerController()));
                     }
                 }
             }
             if (isKillingPlayer)
             {
-                this.canBeMoved = false;
+                canBeMoved = false;
             }
         }
 
@@ -652,30 +608,30 @@ namespace LCOffice.Patches
         {
             if (nearestDroppedItem != null)
             {
-                if (this.isNearestItem && !this.nearestDroppedItem.GetComponent<GrabbableObject>().isHeld)
+                if (isNearestItem && !nearestDroppedItem.GetComponent<GrabbableObject>().isHeld)
                 {
                     if (hungerValue.Value < 55f)
                     {
-                        this.lookRay = new Ray(this.dogHead.position, this.nearestDroppedItem.transform.position - this.dogHead.position);
-                        this.lookTarget.position = Vector3.Lerp(this.lookTarget.position, this.lookRay.GetPoint(1.8f), 6f * Time.deltaTime);
+                        lookRay = new Ray(dogHead.position, nearestDroppedItem.transform.position - dogHead.position);
+                        lookTarget.position = Vector3.Lerp(lookTarget.position, lookRay.GetPoint(1.8f), 6f * Time.deltaTime);
                     }
                     else
                     {
-                        this.lookTarget.position = Vector3.Lerp(this.lookTarget.position, this.nearestDroppedItem.transform.position, 6f * Time.deltaTime);
+                        lookTarget.position = Vector3.Lerp(lookTarget.position, nearestDroppedItem.transform.position, 6f * Time.deltaTime);
                     }
-                    if (this.agent.enabled && base.IsOwner)
+                    if (agent.enabled && base.IsOwner)
                     {
-                        this.agent.SetDestination(this.nearestDroppedItem.transform.position);
+                        agent.SetDestination(nearestDroppedItem.transform.position);
                     }
-                    this.nearestItemDistance = Vector3.Distance(base.transform.position, this.nearestDroppedItem.transform.position);
+                    nearestItemDistance = Vector3.Distance(base.transform.position, nearestDroppedItem.transform.position);
                     if (nearestItemDistance < 1.35f)
                     {
-                        this.canBeMoved = false;
-                        this.isRunning = false;
-                        this.nearestDroppedItem.transform.SetParent(base.transform, true);
+                        canBeMoved = false;
+                        isRunning = false;
+                        nearestDroppedItem.transform.SetParent(base.transform, true);
                         if (nearestDroppedItem.GetComponent<LungProp>() != null)
                         {
-                            this.satisfyValue += 30f;
+                            satisfyValue += 30f;
                             if (base.IsOwner)
                             {
                                 hungerValue.Value -= 50f;
@@ -687,9 +643,9 @@ namespace LCOffice.Patches
                         {
                             if (nearestDroppedItem.GetComponent<StunGrenadeItem>() != null)
                             {
-                                StunGrenadeItem component = this.nearestDroppedItem.GetComponent<StunGrenadeItem>();
+                                StunGrenadeItem component = nearestDroppedItem.GetComponent<StunGrenadeItem>();
                                 component.hasExploded = true;
-                                base.StartCoroutine(this.EatenFlashbang());
+                                base.StartCoroutine(EatenFlashbang());
                             }
                         }
                         creatureAnimator.SetTrigger("eat");
@@ -698,10 +654,10 @@ namespace LCOffice.Patches
                         nearestItemDistance = 500f;
                         if (nearestDroppedItem.GetComponent<GrabbableObject>().itemProperties.weight > 1f)
                         {
-                            satisfyValue += Mathf.Clamp(this.nearestDroppedItem.GetComponent<GrabbableObject>().itemProperties.weight - 1f, 0f, 100f) * 150f;
+                            satisfyValue += Mathf.Clamp(nearestDroppedItem.GetComponent<GrabbableObject>().itemProperties.weight - 1f, 0f, 100f) * 150f;
                             if (base.IsOwner)
                             {
-                                hungerValue.Value -= Mathf.Clamp(this.nearestDroppedItem.GetComponent<GrabbableObject>().itemProperties.weight - 1f, 0f, 100f) * 230f;
+                                hungerValue.Value -= Mathf.Clamp(nearestDroppedItem.GetComponent<GrabbableObject>().itemProperties.weight - 1f, 0f, 100f) * 230f;
                             }
                         }
                         else
@@ -712,7 +668,7 @@ namespace LCOffice.Patches
                                 hungerValue.Value -= 12f;
                             }
                         }
-                        GrabbableObject component2 = this.nearestDroppedItem.GetComponent<GrabbableObject>();
+                        GrabbableObject component2 = nearestDroppedItem.GetComponent<GrabbableObject>();
                         component2.grabbable = false;
                         component2.grabbableToEnemies = false;
                         component2.deactivated = true;
@@ -824,43 +780,38 @@ namespace LCOffice.Patches
 
         private void FindNearestItem()
         {
-            foreach (GameObject gameObject in this.droppedItems)
+            foreach (GameObject gameObject in droppedItems)
             {
                 float num = Vector3.Distance(base.transform.position, gameObject.transform.position);
                 if (Vector3.Distance(base.transform.position, gameObject.transform.position) < float.PositiveInfinity && num < 30f)
                 {
-                    bool flag2 = !gameObject.GetComponent<GrabbableObject>().isHeld;
-                    if (flag2)
+                    if (!gameObject.GetComponent<GrabbableObject>().isHeld)
                     {
-                        this.nearestDroppedItem = gameObject;
-                        this.isNearestItem = true;
+                        nearestDroppedItem = gameObject;
+                        isNearestItem = true;
                         return;
                     }
                 }
             }
-            this.isNearestItem = false;
+            isNearestItem = false;
         }
 
         public override void DetectNoise(Vector3 noisePosition, float noiseLoudness, int timesPlayedInOneSpot = 0, int noiseID = 0)
         {
             base.DetectNoise(noisePosition, noiseLoudness, timesPlayedInOneSpot, noiseID);
             float num = Vector3.Distance(noisePosition, base.transform.position);
-            bool flag = num > 15f;
-            if (!flag)
+            if (num <= 15f)
             {
-                bool flag2 = Physics.Linecast(this.eye.position, noisePosition, StartOfRound.Instance.collidersAndRoomMaskAndDefault, QueryTriggerInteraction.Ignore);
-                if (flag2)
+                if (Physics.Linecast(this.eye.position, noisePosition, StartOfRound.Instance.collidersAndRoomMaskAndDefault, QueryTriggerInteraction.Ignore))
                 {
                     noiseLoudness /= 2f;
                 }
-                bool flag3 = (double)(noiseLoudness / num) <= 0.045;
-                if (!flag3)
+                if ((noiseLoudness / num) > 0.045f)
                 {
-                    bool flag4 = this.timeSinceLookingAtNoise > 5f;
-                    if (flag4)
+                    if (timeSinceLookingAtNoise > 5f)
                     {
-                        this.timeSinceLookingAtNoise = 0f;
-                        this.lookAtNoise = noisePosition;
+                        timeSinceLookingAtNoise = 0f;
+                        lookAtNoise = noisePosition;
                     }
                 }
             }
@@ -882,40 +833,40 @@ namespace LCOffice.Patches
             Vector3 position;
             if (isNetworkTargetPlayer.Value)
             {
-                this.agent.destination = ShrimpAI.networkTargetPlayer.Value.GetPlayerController().transform.position;
-                position = ShrimpAI.networkTargetPlayer.Value.GetPlayerController().transform.position;
+                agent.destination = networkTargetPlayer.Value.GetPlayerController().transform.position;
+                position = networkTargetPlayer.Value.GetPlayerController().transform.position;
                 position.y = base.transform.position.y;
             }else
             { 
-                this.agent.destination = nearestPlayer.transform.position;
+                agent.destination = nearestPlayer.transform.position;
                 position = nearestPlayer.transform.position;
                 position.y = base.transform.position.y;
             }
             Vector3 vector = position - base.transform.position;
-            this.backAwayRay = new Ray(base.transform.position, vector * -1f);
-            if (Physics.Raycast(this.backAwayRay, out this.hitInfo, 60f, StartOfRound.Instance.collidersAndRoomMaskAndDefault))
+            backAwayRay = new Ray(base.transform.position, vector * -1f);
+            if (Physics.Raycast(backAwayRay, out hitInfo, 60f, StartOfRound.Instance.collidersAndRoomMaskAndDefault))
             {
-                if (this.hitInfo.distance < 4f)
+                if (hitInfo.distance < 4f)
                 {
-                    if (Physics.Linecast(base.transform.position, this.hitInfo.point + Vector3.Cross(vector, Vector3.up) * 25.5f, out this.hitInfoB, StartOfRound.Instance.collidersAndRoomMaskAndDefault))
+                    if (Physics.Linecast(base.transform.position, hitInfo.point + Vector3.Cross(vector, Vector3.up) * 25.5f, out hitInfoB, StartOfRound.Instance.collidersAndRoomMaskAndDefault))
                     {
-                        float distance = this.hitInfoB.distance;
-                        if (Physics.Linecast(base.transform.position, this.hitInfo.point + Vector3.Cross(vector, Vector3.up) * -25.5f, out this.hitInfoB, StartOfRound.Instance.collidersAndRoomMaskAndDefault))
+                        float distance = hitInfoB.distance;
+                        if (Physics.Linecast(base.transform.position, hitInfo.point + Vector3.Cross(vector, Vector3.up) * -25.5f, out hitInfoB, StartOfRound.Instance.collidersAndRoomMaskAndDefault))
                         {
-                            float distance2 = this.hitInfoB.distance;
+                            float distance2 = hitInfoB.distance;
                             if (Mathf.Abs(distance - distance2) < 5f)
                             {
-                                this.agent.destination = this.hitInfo.point + Vector3.Cross(vector, Vector3.up) * -4.5f;
+                                agent.destination = hitInfo.point + Vector3.Cross(vector, Vector3.up) * -4.5f;
                             }
                             else
                             {
                                 if (distance < distance2)
                                 {
-                                    this.agent.destination = this.hitInfo.point + Vector3.Cross(vector, Vector3.up) * -4.5f;
+                                    agent.destination = hitInfo.point + Vector3.Cross(vector, Vector3.up) * -4.5f;
                                 }
                                 else
                                 {
-                                    this.agent.destination = this.hitInfo.point + Vector3.Cross(vector, Vector3.up) * 4.5f;
+                                    agent.destination = hitInfo.point + Vector3.Cross(vector, Vector3.up) * 4.5f;
                                 }
                             }
                         }
@@ -923,19 +874,19 @@ namespace LCOffice.Patches
                 }
                 else
                 {
-                    this.agent.destination = this.hitInfo.point;
+                    agent.destination = hitInfo.point;
                 }
             }
             else
             {
-                this.agent.destination = this.backAwayRay.GetPoint(2.3f);
+                agent.destination = backAwayRay.GetPoint(2.3f);
             }
-            this.agent.stoppingDistance = 0.2f;
+            agent.stoppingDistance = 0.2f;
             Quaternion quaternion = Quaternion.Slerp(base.transform.rotation, Quaternion.LookRotation(vector), 3f * Time.deltaTime);
             base.transform.eulerAngles = new Vector3(0f, quaternion.eulerAngles.y, 0f);
-            this.agent.speed = 8f;
+            agent.speed = 8f;
             agent.acceleration = 50000;
-            this.creatureAnimator.SetFloat("walkSpeed", -2.2f);
+            creatureAnimator.SetFloat("walkSpeed", -2.2f);
         }
 
         private IEnumerator EatenFlashbang()
@@ -947,8 +898,7 @@ namespace LCOffice.Patches
 
         private void KillPlayerTrigger(PlayerControllerB killPlayer)
         {
-            bool flag = !killPlayer.isCameraDisabled;
-            if (flag)
+            if (!killPlayer.isCameraDisabled)
             {
                 base.StartCoroutine(this.KillPlayer(killPlayer));
                 Plugin.mls.LogInfo("(Shrimp) Triggered KillPlayer");
@@ -961,79 +911,76 @@ namespace LCOffice.Patches
 
         private IEnumerator KillPlayer(PlayerControllerB killPlayer)
         {
-            ShrimpAI.hungerValue.Value = 0f;
+            hungerValue.Value = 0f;
             yield return new WaitForSeconds(0.05f);
-            this.isKillingPlayer = true;
-            this.creatureAnimator.SetTrigger("RipObject");
-            this.mainAudio.PlayOneShot(Plugin.ripPlayerApart);
-            bool flag = GameNetworkManager.Instance.localPlayerController == killPlayer;
-            if (flag)
+            isKillingPlayer = true;
+            creatureAnimator.SetTrigger("RipObject");
+            mainAudio.PlayOneShot(Plugin.ripPlayerApart);
+            if (GameNetworkManager.Instance.localPlayerController == killPlayer)
             {
                 Plugin.mls.LogInfo("(Shrimp) Killing Player");
                 killPlayer.KillPlayer(Vector3.zero, true, CauseOfDeath.Mauling, 0);
             }
             yield return new WaitForSeconds(0.1f);
-            bool flag2 = killPlayer.deadBody == null;
-            if (flag2)
+            if (killPlayer.deadBody == null)
             {
                 Debug.Log("Shrimp: Player body was not spawned or found within 0.5 seconds.");
                 killPlayer.inAnimationWithEnemy = null;
-                this.isKillingPlayer = false;
-                ShrimpAI.KillingPlayerBool.Value = false;
+                isKillingPlayer = false;
+                KillingPlayerBool.Value = false;
                 yield break;
             }
-            this.TakeBodyInMouth(killPlayer.deadBody);
+            TakeBodyInMouth(killPlayer.deadBody);
             yield return new WaitForSeconds(4.4f);
-            this.creatureAnimator.SetTrigger("eat");
-            this.mainAudio.PlayOneShot(Plugin.dogEatItem);
+            creatureAnimator.SetTrigger("eat");
+            mainAudio.PlayOneShot(Plugin.dogEatItem);
             killPlayer.deadBody.gameObject.SetActive(false);
             yield return new WaitForSeconds(2f);
-            this.isKillingPlayer = false;
+            isKillingPlayer = false;
             yield break;
         }
 
         private IEnumerator KillPlayerInOtherClient(PlayerControllerB killPlayer)
         {
-            ShrimpAI.hungerValue.Value = 0f;
+            hungerValue.Value = 0f;
             yield return new WaitForSeconds(0.05f);
-            this.isKillingPlayer = true;
-            this.creatureAnimator.SetTrigger("RipObject");
-            this.mainAudio.PlayOneShot(Plugin.ripPlayerApart);
+            isKillingPlayer = true;
+            creatureAnimator.SetTrigger("RipObject");
+            mainAudio.PlayOneShot(Plugin.ripPlayerApart);
             yield return new WaitForSeconds(0.1f);
-            bool flag = killPlayer.deadBody == null;
-            if (flag)
+            if (killPlayer.deadBody == null)
             {
                 Debug.Log("Shrimp: Player body was not spawned or found within 0.5 seconds.");
                 killPlayer.inAnimationWithEnemy = null;
-                this.isKillingPlayer = false;
-                ShrimpAI.KillingPlayerBool.Value = false;
+                isKillingPlayer = false;
+                KillingPlayerBool.Value = false;
                 yield break;
             }
-            this.TakeBodyInMouth(killPlayer.deadBody);
+            TakeBodyInMouth(killPlayer.deadBody);
             yield return new WaitForSeconds(4.4f);
-            this.creatureAnimator.SetTrigger("eat");
-            this.mainAudio.PlayOneShot(Plugin.dogEatItem);
+            creatureAnimator.SetTrigger("eat");
+            mainAudio.PlayOneShot(Plugin.dogEatItem);
             killPlayer.deadBody.gameObject.SetActive(false);
             yield return new WaitForSeconds(2f);
-            this.isKillingPlayer = false;
+            isKillingPlayer = false;
             yield break;
         }
 
         private void TakeBodyInMouth(DeadBodyInfo body)
         {
-            body.attachedTo = this.bittenObjectHolder;
+            body.attachedTo = bittenObjectHolder;
             body.attachedLimb = body.bodyParts[5];
             body.matchPositionExactly = true;
         }
 
         private void SetupBehaviour()
         {
-            this.roamingState.name = "Roaming";
-            this.roamingState.boolValue = true;
-            this.followingPlayer.name = "Following";
-            this.followingPlayer.boolValue = true;
-            this.enragedState.name = "Enraged";
-            this.enragedState.boolValue = true;
+            roamingState.name = "Roaming";
+            roamingState.boolValue = true;
+            followingPlayer.name = "Following";
+            followingPlayer.boolValue = true;
+            enragedState.name = "Enraged";
+            enragedState.boolValue = true;
         }
 
         public float networkPosDistance;
