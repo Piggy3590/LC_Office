@@ -34,7 +34,7 @@ namespace LCOffice
     {
         private const string modGUID = "Piggy.LCOffice";
         private const string modName = "LCOffice";
-        private const string modVersion = "1.1.14";
+        private const string modVersion = "1.1.23";
 
         private readonly Harmony harmony = new Harmony(modGUID);
 
@@ -99,6 +99,15 @@ namespace LCOffice
         public static DungeonFlow officeDungeonFlow_A;
         public static TerminalNode shrimpTerminalNode;
         public static TerminalKeyword shrimpTerminalKeyword;
+
+        public static TerminalKeyword elevatorKeyword;
+        public static TerminalKeyword elevator1Keyword;
+        public static TerminalKeyword elevator2Keyword;
+        public static TerminalKeyword elevator3Keyword;
+
+        public static TerminalNode elevator1Node;
+        public static TerminalNode elevator2Node;
+        public static TerminalNode elevator3Node;
 
         //public static TerminalNode haltFile;
         //public static TerminalKeyword haltTK;
@@ -195,13 +204,13 @@ namespace LCOffice
                 this.configOfficeRarity = base.Config.Bind<int>("General", "OfficeRarity", 40, new ConfigDescription("How rare it is for the office to be chosen. Higher values increases the chance of spawning the office.", new AcceptableValueRange<int>(0, 300), Array.Empty<object>()));
                 this.configGuaranteedOffice = base.Config.Bind<bool>("General", "OfficeGuaranteed", false, new ConfigDescription("If enabled, the office will be effectively guaranteed to spawn. Only recommended for debugging/sightseeing purposes.", null, Array.Empty<object>()));
                 this.configMoons = base.Config.Bind<string>("General", "OfficeMoonsList", "free", new ConfigDescription("The moon(s) that the office can spawn on, in the form of a comma separated list of selectable level names (e.g. \"TitanLevel,RendLevel,DineLevel\")\nNOTE: These must be the internal data names of the levels (all vanilla moons are \"MoonnameLevel\", for modded moon support you will have to find their name if it doesn't follow the convention).\nThe following strings: \"all\", \"vanilla\", \"modded\", \"paid\", \"free\", \"none\" are dynamic presets which add the dungeon to that specified group (string must only contain one of these, or a manual moon name list).\nDefault dungeon generation size is balanced around the dungeon scale multiplier of Titan (2.35), moons with significantly different dungeon size multipliers (see Lethal Company wiki for values) may result in dungeons that are extremely small/large.", null, Array.Empty<object>()));
-                this.configLengthOverride = base.Config.Bind<int>("General", "OfficeLengthOverride", -1, new ConfigDescription(string.Format("If not -1, overrides the office length to whatever you'd like. Adjusts how long/large the dungeon generates.\nBe *EXTREMELY* careful not to set this too high (anything too big on a moon with a high dungeon size multipier can cause catastrophic problems, like crashing your computer or worse)\nFor reference, the default value for the current version [{0}] is {1}. If it's too big, make this lower e.g. 6, if it's too small use something like 10 (or higher, but don't go too crazy with it).", "1.1.2", officeDungeonFlow.Length.Min), null, Array.Empty<object>()));
+                this.configLengthOverride = base.Config.Bind<int>("General", "OfficeLengthOverride", -1, new ConfigDescription(string.Format("If not -1, overrides the office length to whatever you'd like. Adjusts how long/large the dungeon generates.\nBe *EXTREMELY* careful not to set this too high (anything too big on a moon with a high dungeon size multipier can cause catastrophic problems, like crashing your computer or worse)\nFor reference, the default value for the current version [{0}] is {1}. If it's too big, make this lower e.g. 6, if it's too small use something like 10 (or higher, but don't go too crazy with it).", "1.1.2", 4), null, Array.Empty<object>()));
 
                 this.configEnableScraps = base.Config.Bind<bool>("General", "OfficeCustomScrap", true, new ConfigDescription("When enabled, enables custom scrap spawning.", null, Array.Empty<object>()));
 
                 musicVolume = (float)base.Config.Bind<float>("General", "ElevatorMusicVolume", 100, "Set the volume of music played in the elevator. (0 - 100)").Value;
                 configDisableCameraShake = (bool)base.Config.Bind<bool>("General", "DisableCameraShake", false, "Turn off custom camera shake.").Value;
-                configDiversityHaltBrighness = (bool)base.Config.Bind<bool>("General", "DiversityHaltBrighness", true, "Increase brightness when encountering Halt if Diversity mode is detected.").Value;
+                configDiversityHaltBrighness = (bool)base.Config.Bind<bool>("General", "DiversityHaltBrighness", true, "Increase brightness when encountering Halt if Diversity mode is detected. Disabling it will make the game VERY difficult when encountering Halt!").Value;
 
                 cameraDisable = (bool)base.Config.Bind<bool>("General", "Disable Camera", false, "Disable cameras inside the office.").Value;
                 cameraFrameSpeed = (int)base.Config.Bind<int>("General", "Camera Frame Speed", 20, "Specifies the camera speed inside the office. If it is over 100, it changes to real-time capture. (FPS)").Value;
@@ -215,8 +224,8 @@ namespace LCOffice
 
                 if (this.configLengthOverride.Value == -1)
                 {
-                    officeDungeonFlow.Length.Min = 6;
-                    officeDungeonFlow.Length.Max = 8;
+                    officeDungeonFlow.Length.Min = 3;
+                    officeDungeonFlow.Length.Max = 3;
                 }
                 else
                 {
@@ -373,12 +382,21 @@ namespace LCOffice
 
                 eatenExplode = Bundle.LoadAsset<AudioClip>("eatenExplode.ogg");
                 dogSneeze = Bundle.LoadAsset<AudioClip>("Sneeze.ogg");
-                dogSatisfied = Bundle.LoadAsset<AudioClip>("DogSatisfied.wav");
+                dogSatisfied = Bundle.LoadAsset<AudioClip>("PlayBow.ogg");
 
                 stanleyVoiceline1 = Bundle.LoadAsset<AudioClip>("stanley.ogg");
 
                 shrimpTerminalNode = Bundle.LoadAsset<TerminalNode>("ShrimpFile.asset");
                 shrimpTerminalKeyword = Bundle.LoadAsset<TerminalKeyword>("shrimpTK.asset");
+
+                elevator1Node = Bundle.LoadAsset<TerminalNode>("Elevator1Node.asset");
+                elevator2Node = Bundle.LoadAsset<TerminalNode>("Elevator2Node.asset");
+                elevator3Node = Bundle.LoadAsset<TerminalNode>("Elevator3Node.asset");
+
+                elevatorKeyword = Bundle.LoadAsset<TerminalKeyword>("ElevatorKeyword.asset");
+                elevator1Keyword = Bundle.LoadAsset<TerminalKeyword>("Elevator1f.asset");
+                elevator2Keyword = Bundle.LoadAsset<TerminalKeyword>("Elevator2f.asset");
+                elevator3Keyword = Bundle.LoadAsset<TerminalKeyword>("Elevator3f.asset");
 
                 //haltFile = Bundle.LoadAsset<TerminalNode>("haltFile.asset");
                 //haltTK = Bundle.LoadAsset<TerminalKeyword>("haltTK.asset");
@@ -473,7 +491,6 @@ namespace LCOffice
                     */
                 }
 
-                LethalLib.Modules.Enemies.RegisterEnemy(shrimpEnemy, shrimpSpawnWeight.Value, Levels.LevelTypes.All, Enemies.SpawnType.Default, shrimpTerminalNode, shrimpTerminalKeyword);
                 //LethalLib.Modules.Enemies.RegisterEnemy(haltEnemy, 0, Levels.LevelTypes.All, Enemies.SpawnType.Default, haltFile, haltTK);
                 /*
                 int[] numbers = shrimpSpawnWeight.Value.Split(',').Select(int.Parse).ToArray();
@@ -514,6 +531,7 @@ namespace LCOffice
                 LethalLib.Modules.NetworkPrefabs.RegisterNetworkPrefab(insideCollider);
                 LethalLib.Modules.NetworkPrefabs.RegisterNetworkPrefab(glitchSound);
 
+                LethalLib.Modules.Enemies.RegisterEnemy(shrimpEnemy, shrimpSpawnWeight.Value, Levels.LevelTypes.All, Enemies.SpawnType.Default, shrimpTerminalNode, shrimpTerminalKeyword);
                 //LethalLib.Modules.Enemies.RegisterEnemy(shrimpEnemy, 10, Levels.LevelTypes.All, Enemies.SpawnType.Default, shrimpTerminalNode, shrimpTerminalKeyword);
 
                 //LethalLib.Modules.Enemies.RegisterEnemy(shrimpEnemy, 0, Levels.LevelTypes.All, Enemies.SpawnType.Default, shrimpTerminalNode, shrimpTerminalKeyword);

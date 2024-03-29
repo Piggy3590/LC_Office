@@ -42,7 +42,7 @@ namespace LCOffice.Patches
         void Start()
         {
             isInHaltSequance = false;
-            GameObject.Instantiate(Plugin.haltRoom, new Vector3(this.transform.position.x, -500, this.transform.position.z), this.transform.rotation);
+            GameObject.Instantiate(Plugin.haltRoom, new Vector3(this.transform.position.x - 2500, this.transform.position.y, this.transform.position.z), this.transform.rotation);
             haltEnterTrigger = GameObject.Find("HaltEnterTrigger").GetComponent<InteractTrigger>();
             haltEnterTrigger.onInteract.AddListener(HaltEnterTrigger);
             haltAnimator = GameObject.Find("HaltContainer").GetComponent<Animator>();
