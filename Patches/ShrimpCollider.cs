@@ -16,21 +16,11 @@ namespace LCOffice.Patches
 {
     public class ShrimpCollider : MonoBehaviour
     {
-        //IHittable
-        /*
         public ShrimpAI shrimpAI;
-        void Start()
+
+        void OnTriggerEnter(Collider collision)
         {
-            shrimpAI = transform.parent.GetComponent<ShrimpAI>();
+            shrimpAI.CollideWithObject(collision.gameObject);
         }
-        bool IHittable.Hit(int force, Vector3 hitDirection, PlayerControllerB playerWhoHit, bool playHitSFX = false)
-        {
-            if (ShrimpAI.hungerValue.Value < 55 && shrimpAI.scaredBackingAway <= 0)
-            {
-                ShrimpAI.isHitted.Value = true;
-            }
-            return true;
-        }
-        */
     }
 }

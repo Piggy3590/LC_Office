@@ -24,7 +24,7 @@ namespace LCOffice.Patches
         public static bool emergencyPowerRequires;
         public static bool emergencyCheck;
         public static bool lungPlaced;
-        /*
+
         public static LethalClientEvent lungPlacedFrameNetwork = new LethalClientEvent(identifier: "LungPlaced", onReceivedFromClient: ReceivedPlacedFrameNetwork);
         public static bool lungPlacedThisFrame;
         public static bool placeLungNetwork;
@@ -33,7 +33,7 @@ namespace LCOffice.Patches
         //public static PlayerControllerB localLungPlacer;
         [PublicNetworkVariable]
         public static LethalNetworkVariable<PlayerControllerB> lungPlacer = new LethalNetworkVariable<PlayerControllerB>(identifier: "LungPlacer");
-        public static LethalNetworkVariable<LungProp> placedLung = new LethalNetworkVariable<LungProp>(identifier: "PlacedLungVar");
+        public static LungProp placedLung;
 
         public static bool isPlaceCalled;
 
@@ -77,16 +77,24 @@ namespace LCOffice.Patches
         }
         void Start()
         {
+            if (!Plugin.emergencyPowerSystem)
+            {
+                return;
+            }
             lungPlacedThisFrame = false;
             placeLungNetwork = false;
             lungPlacer.Value = null;
-            placedLung.Value = null;
+            placedLung = null;
             emergencyPowerRequires = false;
             emergencyCheck = false;
         }
 
         void LateUpdate()
         {
+            if (!Plugin.emergencyPowerSystem)
+            {
+                return;
+            }
             if (StartOfRound.Instance.inShipPhase)
             {
                 Destroy(this.gameObject);
@@ -227,11 +235,11 @@ namespace LCOffice.Patches
 
         void RemoveLung()
         {
-            if (placedLung.Value.isHeld)
+            if (placedLung.isHeld)
             {
                 lungPlaced = false;
                 isPlaceCalled = false;
-                PlaceLung.placedLung.Value = null;
+                PlaceLung.placedLung = null;
             }
         }
         [HarmonyPatch(typeof(LungProp))]
@@ -269,6 +277,5 @@ namespace LCOffice.Patches
                 }
             }
         }
-        */
     }
 }

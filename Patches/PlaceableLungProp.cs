@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Data.SqlTypes;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Runtime.Remoting.Messaging;
 using System.Security.Policy;
 using System.Text;
 using System.Threading.Tasks;
@@ -22,7 +23,6 @@ namespace LCOffice.Patches
 {
     public class PlaceableLungProp : MonoBehaviour
     {
-        /*
         public bool isSetupEnd;
         public bool isPlaced;
         public ElevatorSystem elevatorSystem;
@@ -36,6 +36,10 @@ namespace LCOffice.Patches
 
         void LateUpdate()
         {
+            if (!Plugin.emergencyPowerSystem)
+            {
+                return;
+            }
             if (!PlaceLung.isSetupEnd)
             {
                 return;
@@ -137,9 +141,9 @@ namespace LCOffice.Patches
                     transform.localRotation = Quaternion.Euler(0, 90, 0);
                     PlaceLung.boxCollider.size = new Vector3(0, 0, 0);
                     PlaceLung.lungPlacedThisFrame = false;
-                    if (PlaceLung.placedLung.Value != lungProp)
+                    if (PlaceLung.placedLung != lungProp)
                     {
-                        PlaceLung.placedLung.Value = lungProp;
+                        PlaceLung.placedLung = lungProp;
                     }
                 }
                 else
@@ -164,9 +168,9 @@ namespace LCOffice.Patches
 
                     PlaceLung.boxCollider.size = new Vector3(0, 0, 0);
                     //PlaceLung.boxCollider.size = new Vector3(2, 1.6f, 2);
-                    if (PlaceLung.placedLung.Value == lungProp)
+                    if (PlaceLung.placedLung == lungProp)
                     {
-                        PlaceLung.placedLung.Value = null;
+                        PlaceLung.placedLung = null;
                     }
                 }
             }
@@ -183,6 +187,5 @@ namespace LCOffice.Patches
             elevatorSystem = GameObject.FindObjectOfType<ElevatorSystem>();
             isSetupEnd = true;
         }
-        */
     }
 }

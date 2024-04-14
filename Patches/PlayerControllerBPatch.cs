@@ -1,45 +1,50 @@
-﻿using BepInEx.Logging;
-using DunGen;
-using GameNetcodeStuff;
+﻿using GameNetcodeStuff;
 using HarmonyLib;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
-using System.Reflection.Emit;
-using System.Runtime.Remoting.Contexts;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
-using System.Xml.Linq;
-using TMPro;
 using Unity.Netcode;
 using UnityEngine;
-using UnityEngine.Audio;
-using UnityEngine.InputSystem;
-using UnityEngine.InputSystem.HID;
 
-namespace LCKorean.Patches
+namespace LCOffice.Patches
 {
     [HarmonyPatch(typeof(PlayerControllerB))]
     internal class PlayerControllerBPatch
     {
-        [HarmonyPostfix]
-        [HarmonyPatch("SetHoverTipAndCurrentInteractTrigger")]
-        private static void SetHoverTipAndCurrentInteractTrigger_Postfix(ref TextMeshProUGUI ___cursorTip)
+        [HarmonyPrefix]
+        [HarmonyPatch("Start")]
+        private static void Start_Prefix(PlayerControllerB __instance, ref bool ___isCameraDisabled)
         {
-            if (___cursorTip.text == "Inventory full!")
+            __instance.gameObject.AddComponent<PlayerElevatorCheck>();
+        }
+
+        [HarmonyPostfix]
+        [HarmonyPatch("TeleportPlayer")]
+        private static void TeleportPlayer_Postfix(PlayerControllerB __instance)
+        {
+            if (HaltRoom.isInHaltSequance)
             {
-                ___cursorTip.text = "인벤토리 가득 참!";
-            }else if (___cursorTip.text == "(Cannot hold until ship has landed)")
-            {
-                ___cursorTip.text = "(함선이 착륙하기 전까지 집을 수 없음)";
-            }else if (___cursorTip.text == "[Hands full]")
-            {
-                ___cursorTip.text = "[양 손 사용 중]";
-            }else if (___cursorTip.text == "Grab : [E]")
-            {
-                ___cursorTip.text = "줍기 : [E]]";
+                __instance.KillPlayer(Vector3.zero, true, CauseOfDeath.Unknown, 1);
             }
         }
+
+        /*
+        [HarmonyPrefix]
+        [HarmonyPatch("DiscardHeldObject")]
+        private static void DiscardHeldObject_Prefix(PlayerControllerB __instance, bool placeObject = false, NetworkObject parentObjectTo = null, Vector3 placePosition = default(Vector3), bool matchRotationOfParent = true)
+        {
+            if (__instance.GetComponent<PlayerElevatorCheck>().isInElevatorB)
+            {
+                Plugin.mls.LogInfo("SS");
+                ElevatorCollider elevatorCollider = GameObject.FindObjectOfType<ElevatorCollider>();
+                placeObject = true;
+                elevatorCollider.transform.InverseTransformPoint(placePosition);
+                parentObjectTo = elevatorCollider.GetComponent<NetworkObject>();
+            }
+        }
+        */
     }
 }

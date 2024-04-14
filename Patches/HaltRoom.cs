@@ -32,6 +32,7 @@ namespace LCOffice.Patches
         public float haltSpeed;
         public static bool isInHaltSequance;
         public static float fullDarknessIntensity;
+        public static GameObject haltNightVision;
 
         public static LethalClientEvent HaltEnterTriggerEvent = new LethalClientEvent(identifier: "haltEnterTriggerEvent", onReceivedFromClient: HaltEnterTrigger);
         public static void HaltEnterTrigger(ulong id)
@@ -58,6 +59,12 @@ namespace LCOffice.Patches
             GameObject.Find("HaltEscapeTrigger1").GetComponent<InteractTrigger>().onInteract.AddListener(Teleport1);
             GameObject.Find("HaltEscapeTrigger2").GetComponent<InteractTrigger>().onInteract.AddListener(Teleport2);
             haltTime = UnityEngine.Random.Range(2, 6);
+            if (GameObject.Find("HaltNightVision") == null)
+            {
+                haltNightVision = GameObject.Instantiate(StartOfRound.Instance.localPlayerController.nightVision.gameObject);
+                haltNightVision.name = "HaltNightVision";
+                haltNightVision.SetActive(false);
+            }
             fullDarknessIntensity = StartOfRound.Instance.localPlayerController.nightVision.intensity;
         }
 
@@ -85,10 +92,11 @@ namespace LCOffice.Patches
                 isInHaltSequance = true;
                 if (Plugin.configDiversityHaltBrighness)
                 {
-                    StartOfRound.Instance.localPlayerController.nightVision.intensity = 600;
+                    haltNightVision.GetComponent<Light>().intensity = 600;
+                    haltNightVision.SetActive(true);
                 }
                 haltEnterTrigger.interactable = false;
-                GameObject.Destroy(haltEnterTrigger.gameObject);
+                GameObject.Destroy(haltEnterTrigger.gameObject); 
             }
         }
 
@@ -113,7 +121,7 @@ namespace LCOffice.Patches
                     isInHaltSequance = false;
                     haltLocalTimer = 0;
                     haltTimer = 0;
-                    StartOfRound.Instance.localPlayerController.nightVision.intensity = fullDarknessIntensity;
+                    haltNightVision.SetActive(false);
                 }
                 haltSpeed += Time.deltaTime;
                 if (haltAnimator.GetFloat("speed") < 2f)
@@ -270,7 +278,7 @@ namespace LCOffice.Patches
             isInHaltSequance = false;
             OfficeRoundSystem.haltNoiseScreen.SetTrigger("NoiseOnce");
             playerController.transform.position = GameObject.Find("TP1").transform.position;
-            StartOfRound.Instance.localPlayerController.nightVision.intensity = fullDarknessIntensity;
+            haltNightVision.SetActive(false);
         }
 
         public void Teleport2(PlayerControllerB playerController)
@@ -300,7 +308,7 @@ namespace LCOffice.Patches
             isInHaltSequance = false;
             OfficeRoundSystem.haltNoiseScreen.SetTrigger("NoiseOnce");
             playerController.transform.position = GameObject.Find("TP2").transform.position;
-            StartOfRound.Instance.localPlayerController.nightVision.intensity = fullDarknessIntensity;
+            haltNightVision.SetActive(false);
         }
 
         public IEnumerator HaltTouchTriggerCoroutine(PlayerControllerB playerWhoHit)
@@ -352,7 +360,7 @@ namespace LCOffice.Patches
             isInHaltSequance = false;
             haltLocalTimer = 0;
             haltTimer = 0;
-            StartOfRound.Instance.localPlayerController.nightVision.intensity = fullDarknessIntensity;
+            haltNightVision.SetActive(false);
         }
     }
 }
