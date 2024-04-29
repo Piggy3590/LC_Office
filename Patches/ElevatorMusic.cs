@@ -33,17 +33,38 @@ namespace LCOffice.Patches
                 {
                     if (currentMusic == 0)
                     {
-                        audioSource.PlayOneShot(Plugin.bossaLullaby);
+                        if (Plugin.elevatorMusicPitchdown)
+                        {
+                            audioSource.PlayOneShot(Plugin.bossaLullabyLowPitch);
+                        }
+                        else
+                        {
+                            audioSource.PlayOneShot(Plugin.bossaLullaby);
+                        }
                         musicPlayTimer = 0;
                         currentMusic += 1;
                     }else if (currentMusic == 1)
                     {
-                        audioSource.PlayOneShot(Plugin.shopTheme);
+                        if (Plugin.elevatorMusicPitchdown)
+                        {
+                            audioSource.PlayOneShot(Plugin.shopThemeLowPitch);
+                        }
+                        else
+                        {
+                            audioSource.PlayOneShot(Plugin.shopTheme);
+                        }
                         musicPlayTimer = 0;
                         currentMusic += 1;
                     }else if (currentMusic == 2)
                     {
-                        audioSource.PlayOneShot(Plugin.saferoomTheme);
+                        if (Plugin.elevatorMusicPitchdown)
+                        {
+                            audioSource.PlayOneShot(Plugin.saferoomThemeLowPitch);
+                        }
+                        else
+                        {
+                            audioSource.PlayOneShot(Plugin.saferoomTheme);
+                        }
                         musicPlayTimer = 0;
                         currentMusic = 0;
                     }

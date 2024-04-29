@@ -34,7 +34,7 @@ namespace LCOffice
     {
         private const string modGUID = "Piggy.LCOffice";
         private const string modName = "LCOffice";
-        private const string modVersion = "1.1.24";
+        private const string modVersion = "1.1.27";
 
         private readonly Harmony harmony = new Harmony(modGUID);
 
@@ -54,6 +54,10 @@ namespace LCOffice
         public static AudioClip shopTheme;
         public static AudioClip saferoomTheme;
         public static AudioClip cootieTheme;
+
+        public static AudioClip bossaLullabyLowPitch;
+        public static AudioClip shopThemeLowPitch;
+        public static AudioClip saferoomThemeLowPitch;
 
         public static AudioClip garageDoorSlam;
         public static AudioClip garageSlide;
@@ -164,6 +168,7 @@ namespace LCOffice
         public static bool configDisableCameraShake;
         public static bool configDiversityHaltBrighness;
         public static float musicVolume;
+        public static bool elevatorMusicPitchdown;
         public static bool emergencyPowerSystem;
 
         public static bool cameraDisable;
@@ -211,6 +216,7 @@ namespace LCOffice
                 this.configEnableScraps = base.Config.Bind<bool>("General", "OfficeCustomScrap", true, new ConfigDescription("When enabled, enables custom scrap spawning.", null, Array.Empty<object>()));
 
                 musicVolume = (float)base.Config.Bind<float>("General", "ElevatorMusicVolume", 100, "Set the volume of music played in the elevator. (0 - 100)").Value;
+                elevatorMusicPitchdown = (bool)base.Config.Bind<bool>("General", "ElevatorMusicPitchDown", true, "Lower the pitch of the elevator music.").Value;
                 configDisableCameraShake = (bool)base.Config.Bind<bool>("General", "DisableCameraShake", false, "Turn off custom camera shake.").Value;
                 configDiversityHaltBrighness = (bool)base.Config.Bind<bool>("General", "DiversityHaltBrighness", true, "Increase brightness when encountering Halt if Diversity mode is detected. Disabling it will make the game VERY difficult when encountering Halt!").Value;
                 emergencyPowerSystem = (bool)base.Config.Bind<bool>("General", "EmergencyPowerSystem", false, "(EXPERIMENTAL) When set to true, if a apparatus is removed from a facility, the elevator will not operate until the apparatus is inserted into the elevator's emergency power unit.").Value;
@@ -340,7 +346,6 @@ namespace LCOffice
                 officeExtendedDungeonFlow.dungeonSizeMin = 1f;
                 officeExtendedDungeonFlow.dungeonSizeMax = 1f;
                 officeExtendedDungeonFlow.dungeonSizeLerpPercentage = 0f;
-
                 PatchedContent.RegisterExtendedDungeonFlow(officeExtendedDungeonFlow);
 
                 shrimpPrefab = Bundle.LoadAsset<GameObject>("Shrimp.prefab");
@@ -358,6 +363,10 @@ namespace LCOffice
                 bossaLullaby = Bundle.LoadAsset<AudioClip>("bossa_lullaby_refiltered.ogg");
                 shopTheme = Bundle.LoadAsset<AudioClip>("shop_refiltered.ogg");
                 saferoomTheme = Bundle.LoadAsset<AudioClip>("saferoom_refiltered.ogg");
+
+                bossaLullabyLowPitch = Bundle.LoadAsset<AudioClip>("bossa_lullaby_low_wpitch.ogg");
+                shopThemeLowPitch = Bundle.LoadAsset<AudioClip>("shop_low_wpitch.ogg");
+                saferoomThemeLowPitch = Bundle.LoadAsset<AudioClip>("saferoom_low_wpitch.ogg");
                 //cootieTheme = Bundle.LoadAsset<AudioClip>("cootie_low.ogg");
 
                 ElevatorOpen = Bundle.LoadAsset<AudioClip>("ElevatorOpen.ogg");

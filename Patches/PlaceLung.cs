@@ -25,10 +25,10 @@ namespace LCOffice.Patches
         public static bool emergencyCheck;
         public static bool lungPlaced;
 
-        public static LethalClientEvent lungPlacedFrameNetwork = new LethalClientEvent(identifier: "LungPlaced", onReceivedFromClient: ReceivedPlacedFrameNetwork);
         public static bool lungPlacedThisFrame;
         public static bool placeLungNetwork;
 
+        /*
         //public static LethalClientMessage<PlayerControllerB> lungPlacer = new LethalClientMessage<PlayerControllerB>(identifier: "Installer", onReceivedFromClient: ReceiveLungPlacer);
         //public static PlayerControllerB localLungPlacer;
         [PublicNetworkVariable]
@@ -65,16 +65,6 @@ namespace LCOffice.Patches
         public static BoxCollider boxCollider;
 
         public List<Light> elevatorLights = new List<Light>();
-
-        public static void ReceiveLungPlacer(PlayerControllerB data, ulong clientId)
-        {
-            //localLungPlacer = data;
-        }
-
-        public static void ReceivedPlacedFrameNetwork(ulong clientId)
-        {
-            lungPlacedThisFrame = true;
-        }
         void Start()
         {
             if (!Plugin.emergencyPowerSystem)
@@ -164,7 +154,7 @@ namespace LCOffice.Patches
                 elevatorSystem = this.GetComponent<ElevatorSystem>();
                 socketAudioSource = this.GetComponent<AudioSource>();
                 socketInteractTrigger = this.GetComponent<InteractTrigger>();
-                socketInteractTrigger.onInteract.AddListener(PlaceApparatusEvent);
+                socketInteractTrigger.onInteract.AddListener(PlaceApparatus);
                 socketLED = GameObject.Find("SocketLED").GetComponent<Animator>();
                 boxCollider = this.GetComponent<BoxCollider>();
                 lungPos = GameObject.Find("LungPos").transform;
@@ -209,16 +199,7 @@ namespace LCOffice.Patches
                 socketInteractTrigger.interactable = false;
             }
         }
-
-        public void PlaceApparatusEvent(PlayerControllerB playerControllerB)
-        {
-            if (playerControllerB.currentlyGrabbingObject.GetComponent<LungProp>() != null && playerControllerB.isHoldingObject)
-            {
-                //placeLungEvent.SendAllClients(playerControllerB);
-                PlaceApparatusLocal(playerControllerB);
-            }
-        }
-        public void PlaceApparatusLocal(PlayerControllerB data)
+        public void PlaceApparatus(PlayerControllerB data)
         {
             Plugin.mls.LogInfo("PlaceApparatus triggered by " + data.gameObject.name);
             if (data.currentlyGrabbingObject.GetComponent<LungProp>() != null && data.isHoldingObject)
@@ -242,6 +223,7 @@ namespace LCOffice.Patches
                 PlaceLung.placedLung = null;
             }
         }
+
         [HarmonyPatch(typeof(LungProp))]
         [HarmonyPrefix]
         [HarmonyPatch("Start")]
@@ -277,5 +259,6 @@ namespace LCOffice.Patches
                 }
             }
         }
+        */
     }
 }

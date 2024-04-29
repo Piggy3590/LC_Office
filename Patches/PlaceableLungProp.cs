@@ -23,6 +23,7 @@ namespace LCOffice.Patches
 {
     public class PlaceableLungProp : MonoBehaviour
     {
+        /*
         public bool isSetupEnd;
         public bool isPlaced;
         public ElevatorSystem elevatorSystem;
@@ -187,5 +188,6 @@ namespace LCOffice.Patches
             elevatorSystem = GameObject.FindObjectOfType<ElevatorSystem>();
             isSetupEnd = true;
         }
+        */
     }
 }
