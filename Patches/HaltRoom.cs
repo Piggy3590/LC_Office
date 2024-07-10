@@ -70,7 +70,7 @@ namespace LCOffice.Patches
 
         public void HaltEnterTrigger(PlayerControllerB playerController)
         {
-            if (!isInHaltSequance && !playerController.isCameraDisabled && (UnityEngine.Random.Range(0, 101) < Plugin.configHaltPropability))
+            if (!isInHaltSequance && playerController == StartOfRound.Instance.localPlayerUsingController && (UnityEngine.Random.Range(0, 101) < Plugin.configHaltPropability))
             {
                 HaltEnterTriggerEvent.InvokeAllClients();
                 OfficeRoundSystem.haltNoiseScreen.SetBool("Noise", true);

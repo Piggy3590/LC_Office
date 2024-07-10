@@ -38,7 +38,6 @@ namespace LCOffice.Patches
             {
                 shrimpAI = GameObject.FindObjectOfType<ShrimpAI>();
             }
-            orgScale = this.transform.localScale;
             boxCollider = this.GetComponent<BoxCollider>();
             if (elevatorCollider == null)
             {
@@ -57,6 +56,10 @@ namespace LCOffice.Patches
                 }
                 if (!grabbableObject.isHeld && droppedItemMoment)
                 {
+                    droppedItemMoment = false;
+                }
+                if (!grabbableObject.isHeld && dogEatTimer <= 1.5f)
+                {
                     if (dogEatTimer == 0)
                     {
                         shrimpAI.droppedItems.Add(this.gameObject);
@@ -66,7 +69,6 @@ namespace LCOffice.Patches
                 if (dogEatTimer > 1.5f)
                 {
                     shrimpAI.droppedItems.Remove(this.gameObject);
-                    droppedItemMoment = false;
                     dogEatTimer = 0;
                 }
             }
@@ -94,11 +96,6 @@ namespace LCOffice.Patches
                     }
                     isAppendedToArray = true;
                 }
-            }
-
-            if (this.transform.localScale != orgScale)
-            {
-                this.transform.localScale = orgScale;
             }
 
             if (OfficeRoundSystem.Instance == null) { return; }

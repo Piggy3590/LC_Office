@@ -68,13 +68,14 @@ namespace LCOffice.Patches
                 if (!isDungeonOfficeChecked)
                 {
                     StartCoroutine(CheckOfficeElevator());
-                    if (isOffice && base.IsServer)
+                    if (isOffice && base.IsOwner)
                     {
                         /*
                         NetworkObject elevatorManager = GameObject.Instantiate(Plugin.socketInteractPrefab).GetComponent<NetworkObject>();
                         elevatorManager.Spawn();
                         */
-                        NetworkObject elevatorCollider = GameObject.Instantiate(Plugin.insideCollider).GetComponent<NetworkObject>();
+                        GameObject elevatorColliderObject = GameObject.Instantiate(Plugin.insideCollider);
+                        NetworkObject elevatorCollider = elevatorColliderObject.GetComponent<NetworkObject>();
                         elevatorCollider.Spawn();
                     }
                     isDungeonOfficeChecked = true;
@@ -84,7 +85,7 @@ namespace LCOffice.Patches
             {
                 if (!TimeOfDay.Instance.currentDayTimeStarted)
                 {
-                    if (isOffice && base.IsServer)
+                    if (isOffice && base.IsOwner)
                     {
                         //GameObject.Destroy(GameObject.Find("InsideCollider(Clone)"));
                         /*

@@ -7,23 +7,13 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.CompilerServices;
 using UnityEngine;
-using Unity.Netcode;
 using LethalLib.Modules;
-using System.Security;
 using System.Security.Permissions;
-using LethalLib.Extras;
 using DunGen.Graph;
 using DunGen;
 using LethalLevelLoader;
 using LCOffice.Patches;
-using static LethalLib.Modules.Levels;
-using UnityEngine.Assertions;
-using UnityEngine.InputSystem.HID;
-using System.Collections;
-using System.Management.Instrumentation;
-using GameNetcodeStuff;
 
 [assembly: SecurityPermission(SecurityAction.RequestMinimum, SkipVerification = true)]
 
@@ -34,7 +24,7 @@ namespace LCOffice
     {
         private const string modGUID = "Piggy.LCOffice";
         private const string modName = "LCOffice";
-        private const string modVersion = "1.1.27";
+        private const string modVersion = "1.2.0";
 
         private readonly Harmony harmony = new Harmony(modGUID);
 
@@ -216,7 +206,7 @@ namespace LCOffice
                 this.configEnableScraps = base.Config.Bind<bool>("General", "OfficeCustomScrap", true, new ConfigDescription("When enabled, enables custom scrap spawning.", null, Array.Empty<object>()));
 
                 musicVolume = (float)base.Config.Bind<float>("General", "ElevatorMusicVolume", 100, "Set the volume of music played in the elevator. (0 - 100)").Value;
-                elevatorMusicPitchdown = (bool)base.Config.Bind<bool>("General", "ElevatorMusicPitchDown", true, "Lower the pitch of the elevator music.").Value;
+                elevatorMusicPitchdown = (bool)base.Config.Bind<bool>("General", "ElevatorMusicPitchDown", false, "Change the pitch of the elevator music. (bc i like it)").Value;
                 configDisableCameraShake = (bool)base.Config.Bind<bool>("General", "DisableCameraShake", false, "Turn off custom camera shake.").Value;
                 configDiversityHaltBrighness = (bool)base.Config.Bind<bool>("General", "DiversityHaltBrighness", true, "Increase brightness when encountering Halt if Diversity mode is detected. Disabling it will make the game VERY difficult when encountering Halt!").Value;
                 emergencyPowerSystem = (bool)base.Config.Bind<bool>("General", "EmergencyPowerSystem", false, "(EXPERIMENTAL) When set to true, if a apparatus is removed from a facility, the elevator will not operate until the apparatus is inserted into the elevator's emergency power unit.").Value;
@@ -477,7 +467,7 @@ namespace LCOffice
                 }
                 else
                 {
-                    shrimpTerminalNode.displayText = "쉬림프\r\n\r\n시구르드의 위험 수준: 60%\r\n\r\n\n학명: 카니스피리투스-아르테무스\r\n\r\n쉬림프는 개를 닮은 생명체로 Upturned Inn의 첫 번째 세입자로 알려져 있습니다. 평소에는 상대적으로 우호적이며, 호기심을 가지고 인간을 따라다닙니다. 불행하게도 그는 위험할 정도로 굉장한 식욕을 가지고 있습니다.\r\n생물학적 특성으로 인해, 그는 대부분의 다른 생물보다 훨씬 더 독특한 위장 기관을 가지고 있습니다. 위 내막은 유연하면서도 견고하기 때문에 어떤 물체라도 영양분을 소화하고 흡수할 수 있습니다.\r\n그러나 이러한 진화적 적응은 자연적으로 빠른 신진대사의 결과일 가능성이 높습니다. 그는 영양분을 너무 빨리 사용하기 때문에 생존하려면 하루에 여러 끼를 먹어야 합니다.\r\n칼로리 소비율이 다양하기 때문에 식사 사이의 시간이 일정하지 않습니다. 이는 몇 시간에서 몇 분까지 지속될 수 있으며, 쉬림프가 오랫동안 무언가를 먹지 않으면 매우 포악해지며 따라다니던 사람을 쫒습니다.\r\n\r\n버려진 건물에 사는 것으로 알려진 쉬림프는 버려진 공장이나 사무실에서 폐철물을 찾아다니는 것으로 발견할 수 있습니다. 그렇다고 다른 곳에서 그를 찾을 수 없다는 말은 아닙니다. 그는 일반적으로 고독한 사냥꾼이며, 때로는 전문적인 추적자가 되기도 합니다.\r\n\r\n시구르드의 노트: 이 녀석이 으르렁거리는 소리를 듣게 된다면, 먹이를 줄 수 있는 무언가를 가지고 있기를 바라세요. 아니면 당신이 이 녀석의 식사가 될 거예요.\r\n맹세컨대... 마치 당신의 영혼을 들여다보는 것 같아요. 다시는 내 뒤에서 이 녀석을 보고 싶지 않아요.\r\n\r\n\r\nIK: <i>손님, 슬퍼하지 마세요! 쉬림프는 당신을 싫어하지 않는답니다.\r\n걔는 그냥... 배고플 뿐이에요.</i>\r\n\r\n";
+                    shrimpTerminalNode.displayText = "쉬림프\r\n\r\n시구르드의 위험 수준: 60%\r\n\r\n\n학명: 카니스피리투스-아르테무스\r\n\r\n쉬림프는 개를 닮은 생명체로 Upturned Inn의 첫 번째 세입자로 알려져 있습니다. 평소에는 상대적으로 우호적이며, 호기심을 가지고 인간을 따라다닙니다. 불행하게도 그는 위험할 정도로 굉장한 식욕을 가지고 있습니다.\r\n생물학적 특성으로 인해, 그는 대부분의 다른 생물보다 훨씬 더 독특한 위장 기관을 가지고 있습니다. 위 내막은 유연하면서도 견고하기 때문에 어떤 물체라도 영양분을 소화하고 흡수할 수 있습니다.\r\n그러나 이러한 진화적 적응은 자연적으로 빠른 신진대사의 결과일 가능성이 높습니다. 그는 영양분을 너무 빨리 사용하기 때문에 생존하려면 하루에 여러 끼를 먹어야 합니다.\r\n칼로리 소비율이 다양하기 때문에 식사 사이의 시간이 일정하지 않습니다. 이는 몇 시간에서 몇 분까지 지속될 수 있으며, 쉬림프가 오랫동안 무언가를 먹지 않으면 매우 포악해지며 따라다니던 사람을 쫒습니다.\r\n\r\n버려진 건물에 사는 것으로 알려진 쉬림프는 버려진 공장이나 사무실에서 폐철물을 찾아다니는 것으로 발견할 수 있습니다. 그렇다고 다른 곳에서 그를 찾을 수 없다는 말은 아닙니다. 그는 일반적으로 고독한 사냥꾼이며, 때로는 전문적인 추적자가 되기도 합니다.\r\n\r\n시구르드의 노트: 이 녀석이 으르렁거리는 소리를 듣게 된다면, 먹이를 줄 수 있는 무언가를 가지고 있기를 바라세요. 아니면 당신이 이 녀석의 식사가 될 거예요.\r\n맹세컨대... 다시는 내 뒤에서 이 녀석을 보고 싶지 않아.\r\n\r\n\r\nIK: <i>손님, 슬퍼하지 마세요! 쉬림프는 당신을 싫어하지 않는답니다.\r\n걔는 그냥... 배고플 뿐이에요.</i>\r\n\r\n";
                     shrimpTerminalNode.creatureName = "쉬림프";
                     shrimpTerminalKeyword.word = "쉬림프";
                     /*
@@ -531,9 +521,27 @@ namespace LCOffice
                 //socketInteractPrefab.AddComponent<PlaceLung>();
                 socketInteractPrefab.AddComponent<ElevatorSystem>();
 
-                ShrimpAI shrimpAI = shrimpPrefab.AddComponent<ShrimpAI>();
-                shrimpPrefab.transform.GetChild(0).gameObject.AddComponent<ShrimpCollider>().shrimpAI = shrimpAI;
-                //shrimpPrefab.transform.GetChild(0).GetComponent<EnemyAICollisionDetect>().mainScript = shrimpAI;
+                ShrimpEnemyAI shrimpAI = shrimpPrefab.AddComponent<ShrimpEnemyAI>();
+                shrimpAI.enemyType = shrimpEnemy;
+                shrimpAI.creatureAnimator = shrimpPrefab.transform.GetChild(0).GetChild(1).GetComponent<Animator>();
+                shrimpAI.creatureVoice = shrimpPrefab.transform.GetChild(0).GetChild(3).GetChild(0).GetComponent<AudioSource>();
+                shrimpAI.creatureSFX = shrimpPrefab.GetComponent<AudioSource>();
+                shrimpAI.dieSFX = dogSneeze;
+
+                shrimpAI.AIIntervalTime = 0.2f;
+                shrimpAI.updatePositionThreshold = 1;
+                shrimpAI.syncMovementSpeed = 0.22f;
+
+                shrimpAI.chitterSFX = new AudioClip[1];
+                shrimpAI.chitterSFX[0] = dogSatisfied;
+                shrimpAI.angryScreechSFX = new AudioClip[1];
+                shrimpAI.angryScreechSFX[0] = dogEatItem;
+
+                shrimpAI.angryVoiceSFX = dogHowl;
+                shrimpAI.bugFlySFX = footstep4;
+                shrimpAI.hitPlayerSFX = dogEatItem;
+
+                shrimpPrefab.transform.GetChild(0).GetComponent<EnemyAICollisionDetect>().mainScript = shrimpAI;
 
                 elevatorManager.AddComponent<ElevatorSystem>();
                 officeRoundSystem.AddComponent<OfficeRoundSystem>();

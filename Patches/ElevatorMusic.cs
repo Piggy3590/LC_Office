@@ -45,26 +45,12 @@ namespace LCOffice.Patches
                         currentMusic += 1;
                     }else if (currentMusic == 1)
                     {
-                        if (Plugin.elevatorMusicPitchdown)
-                        {
-                            audioSource.PlayOneShot(Plugin.shopThemeLowPitch);
-                        }
-                        else
-                        {
-                            audioSource.PlayOneShot(Plugin.shopTheme);
-                        }
+                        audioSource.PlayOneShot(Plugin.shopTheme);
                         musicPlayTimer = 0;
                         currentMusic += 1;
                     }else if (currentMusic == 2)
                     {
-                        if (Plugin.elevatorMusicPitchdown)
-                        {
-                            audioSource.PlayOneShot(Plugin.saferoomThemeLowPitch);
-                        }
-                        else
-                        {
-                            audioSource.PlayOneShot(Plugin.saferoomTheme);
-                        }
+                        audioSource.PlayOneShot(Plugin.saferoomTheme);
                         musicPlayTimer = 0;
                         currentMusic = 0;
                     }

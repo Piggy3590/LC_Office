@@ -7,7 +7,6 @@ using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.AI;
 using UnityEngine.Animations.Rigging;
-using UnityEngine.InputSystem.HID;
 
 namespace LCOffice.Patches
 {
@@ -20,6 +19,7 @@ namespace LCOffice.Patches
 
         public override void Start()
         {
+            GameObject.Destroy(this.GetComponent<ShrimpAI>());
             isNetworkTargetPlayer.Value = false;
             SelectNode.Value = 0;
             shrimpVelocity.Value = 0f;
@@ -121,7 +121,7 @@ namespace LCOffice.Patches
                 scaredBackingAway -= Time.deltaTime;
             }
         }
-
+        /*
         public override void HitEnemy(int force = 1, PlayerControllerB playerWhoHit = null, bool playHitSFX = false)
         {
             base.HitEnemy(force, playerWhoHit, false);
@@ -130,6 +130,7 @@ namespace LCOffice.Patches
                 isHitted.Value = true;
             }
         }
+        */
 
         public void FootStepSound()
         {
@@ -805,16 +806,15 @@ namespace LCOffice.Patches
                 float num = Vector3.Distance(base.transform.position, gameObject.transform.position);
                 if (Vector3.Distance(base.transform.position, gameObject.transform.position) < float.PositiveInfinity && num < 30f)
                 {
-                    bool flag2 = !gameObject.GetComponent<GrabbableObject>().isHeld;
-                    if (flag2)
+                    if (!gameObject.GetComponent<GrabbableObject>().isHeld)
                     {
-                        this.nearestDroppedItem = gameObject;
-                        this.isNearestItem = true;
+                        nearestDroppedItem = gameObject;
+                        isNearestItem = true;
                         return;
                     }
                 }
             }
-            this.isNearestItem = false;
+            isNearestItem = false;
         }
 
         public override void DetectNoise(Vector3 noisePosition, float noiseLoudness, int timesPlayedInOneSpot = 0, int noiseID = 0)

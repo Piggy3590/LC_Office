@@ -41,6 +41,7 @@ namespace LCOffice.Patches
         public static Animator doorAnimator;
         public Animator elevatorScreenDoorAnimator;
         public static Animator animator;
+        public static Animator actualElevatorAnimator;
 
         public AudioSource audioSource;
 
@@ -138,6 +139,7 @@ namespace LCOffice.Patches
                         {
                             Plugin.mls.LogInfo("Elevator down to 2f");
                             animator.SetInteger("floor", 1);
+                            //actualElevatorAnimator.SetInteger("floor", 1);
                             foreach (Animator buttonLightAnimator in buttonLightAnimators)
                             {
                                 buttonLightAnimator.SetInteger("sta", 1);
@@ -146,6 +148,7 @@ namespace LCOffice.Patches
                         {
                             Plugin.mls.LogInfo("Elevator down to 1f");
                             animator.SetInteger("floor", 0);
+                            //actualElevatorAnimator.SetInteger("floor", 0);
                             foreach (Animator buttonLightAnimator in buttonLightAnimators)
                             {
                                 buttonLightAnimator.SetInteger("sta", 0);
@@ -173,6 +176,7 @@ namespace LCOffice.Patches
                         {
                             Plugin.mls.LogInfo("Elevator up to 2f");
                             animator.SetInteger("floor", 1);
+                            //actualElevatorAnimator.SetInteger("floor", 1);
                             foreach (Animator buttonLightAnimator in buttonLightAnimators)
                             {
                                 buttonLightAnimator.SetInteger("sta", 1);
@@ -182,6 +186,7 @@ namespace LCOffice.Patches
                         {
                             Plugin.mls.LogInfo("Elevator up to 3f");
                             animator.SetInteger("floor", 2);
+                            //actualElevatorAnimator.SetInteger("floor", 2);
                             foreach (Animator buttonLightAnimator in buttonLightAnimators)
                             {
                                 buttonLightAnimator.SetInteger("sta", 2);
@@ -189,6 +194,7 @@ namespace LCOffice.Patches
                         }
                         audioSource.PlayOneShot(Plugin.ElevatorUp);
                         animator.SetBool("goDown", false);
+                        //actualElevatorAnimator.SetBool("goDown", false);
                         elevatorFloor.Value = animator.GetInteger("floor");
                     }
                 }
