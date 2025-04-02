@@ -1,7 +1,7 @@
 ﻿using GameNetcodeStuff;
-using JLL.Components;
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using Unity.Netcode;
 using UnityEngine;
 
@@ -29,8 +29,8 @@ namespace LCOffice.Components
         [HideInInspector] public ElevatorController controller;
 
         // Pannel Font
-        //[HideInInspector] public TMP_FontAsset textFont;
-        //[HideInInspector] public Material textMaterial;
+        [HideInInspector] public TMP_FontAsset textFont;
+        [HideInInspector] public Material textMaterial;
         [HideInInspector] public Color textColor;
 
         private GameObject SparkParticle;
@@ -41,15 +41,17 @@ namespace LCOffice.Components
             controller = FindObjectOfType<ElevatorController>();
             elevatorFloor = 1;
 
-            /*
             TMP_Text text = GameObject.Find("doorHydraulics").GetComponent<TMP_Text>();
             textFont = text.font;
             textMaterial = text.material;
-            */
             textColor = new Color(1, 0.3444f, 0, 1);
 
             System = this;
             transform.position = controller.startPos + new Vector3(4.55f, -21.5f, -2.8f);
+            for (int i = 0; i < controller.floorIndicators.Length; i++)
+            {
+                controller.floorIndicators[i].SetActive(i == 1);
+            }
         }
 
         public static void Spawn(Transform parent)
@@ -114,6 +116,7 @@ namespace LCOffice.Components
 
             yield return new WaitForSeconds(2f);
 
+            controller.floorIndicators[floor].SetActive(true);
             bool shortDistance = Mathf.Abs(elevatorFloor - floor) == 1;
             int animHash = animator.GetCurrentAnimatorStateInfo(0).shortNameHash;
             controller.animator.SetInteger("floor", floor);
@@ -124,12 +127,14 @@ namespace LCOffice.Components
             if (emergency) directionLabel = $"Emergency {directionLabel}";
             Plugin.mls.LogInfo($"Elevator {directionLabel} from {elevatorFloor} to {floor}");
 
+            GameObject oldIndicator = controller.floorIndicators[elevatorFloor];
             elevatorFloor = floor;
             elevatorMoving = true;
 
             foreach (ElevatorPannel pannel in controlPannels)
             {
                 pannel.display.text =  directionLabel;
+                pannel.lightAnimator.SetInteger("sta", floor);
             }
 
             yield return 0;
@@ -141,6 +146,7 @@ namespace LCOffice.Components
 
             elevatorMoving = false;
             controller.OpenDoor(elevatorFloor);
+            oldIndicator.SetActive(false);
 
             yield return 0;
             yield return new WaitUntil(() => animator.GetCurrentAnimatorStateInfo(0).normalizedTime > 1.2f);
@@ -154,7 +160,6 @@ namespace LCOffice.Components
             {
                 pannel.display.text = text;
                 pannel.SetInteractable(powered);
-                pannel.lightAnimator.SetInteger("sta", elevatorFloor);
             }
 
             yield break;

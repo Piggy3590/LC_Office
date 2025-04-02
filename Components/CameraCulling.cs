@@ -17,13 +17,15 @@ namespace LCOffice.Components
         private bool disabled;
         private float elapsed;
 
+        public bool inControlRoom = false;
+
         void Start()
         {
             player = StartOfRound.Instance.localPlayerController.transform;
             playerObjects = StartOfRound.Instance.allPlayerObjects;
             camera = GetComponent<Camera>();
             fps = Plugin.cameraFrameSpeed.Value;
-            disabled = Plugin.cameraDisable.Value || fps == 0;
+            disabled = (inControlRoom ? Plugin.controlRoomCameraDisable.Value : Plugin.cameraDisable.Value) || fps == 0;
             camera.enabled = false;
             camera.Render();
             elapsed = Random.Range(0f, 1f);

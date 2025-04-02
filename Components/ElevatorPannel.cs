@@ -28,8 +28,8 @@ namespace LCOffice.Components
             SubscribeListener(UpButton, 2);
             SubscribeListener(MidButton, 1);
             SubscribeListener(DownButton, 0);
-            //display.font = ElevatorSystem.System.textFont;
-            //display.material = ElevatorSystem.System.textMaterial;
+            display.font = ElevatorSystem.System.textFont;
+            display.material = ElevatorSystem.System.textMaterial;
             display.color = ElevatorSystem.System.textColor;
             display.text = "Idle";
         }

@@ -1,4 +1,5 @@
-﻿using JLL.Components;
+﻿using DunGen;
+using JLL.Components;
 using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
@@ -28,6 +29,16 @@ namespace LCOffice.Components
 
         public ElevatorMusic music;
 
+        [Header("Notice Board")]
+        public Doorway[] topSockets;
+        public GameObject topBlocker;
+        public Doorway[] midSockets;
+        public GameObject midBlocker;
+        public Doorway[] bottomSockets;
+        public GameObject bottomBlocker;
+
+        public GameObject[] floorIndicators;
+
         private void Start()
         {
             startPos = transform.position;
@@ -38,6 +49,22 @@ namespace LCOffice.Components
         public void PostDungeonGeneration()
         {
             ElevatorSystem.Spawn(transform);
+
+            topBlocker.SetActive(!DoorwayConnected(topSockets));
+            midBlocker.SetActive(!DoorwayConnected(midSockets));
+            bottomBlocker.SetActive(!DoorwayConnected(bottomSockets));
+        }
+
+        private bool DoorwayConnected(Doorway[] sockets)
+        {
+            foreach (Doorway socket in sockets)
+            {
+                if (socket.ConnectedDoorway != null)
+                {
+                    return true;
+                }
+            }
+            return false;
         }
 
         public void OpenDoor(int floor)

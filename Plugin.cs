@@ -21,7 +21,7 @@ namespace LCOffice
     {
         private const string modGUID = "Piggy.LCOffice";
         private const string modName = "LCOffice";
-        private const string modVersion = "2.0.0";
+        private const string modVersion = "2.2.0";
 
         private readonly Harmony harmony = new(modGUID);
 
@@ -37,18 +37,24 @@ namespace LCOffice
         private ConfigEntry<bool> configEnableScraps;
 
         public static ConfigEntry<PathCount> mainPaths;
-
         public enum PathCount
         {
             One = 1,
             Two = 2,
             Three = 3
         }
+        public static ConfigEntry<ScalePreset> generationScale;
+        public enum ScalePreset
+        {
+            Normal = 1,
+            Large = 2
+        }
 
         public static ConfigEntry<float> musicVolume;
         public static ConfigEntry<bool> elevatorMusicPitchdown;
 
         public static ConfigEntry<bool> cameraDisable;
+        public static ConfigEntry<bool> controlRoomCameraDisable;
         public static ConfigEntry<int> cameraFrameSpeed;
 
         public static TerminalKeyword elevatorKeyword;
@@ -85,12 +91,14 @@ namespace LCOffice
                 configEnableScraps = Config.Bind("General", "OfficeCustomScrap", true, new ConfigDescription("When enabled, enables custom scrap spawning.", null, Array.Empty<object>()));
 
                 mainPaths = Config.Bind("General", "MainDungeonPaths", PathCount.Two, "The number of main paths the interior generates. (Main paths will be longer than other paths. Increasing this number increases the size of the dungeon but makes the distribution between elevator floors larger) (When set to \"One\" switches size and branch count numbers back similar to the 2.0.0 version.)");
+                generationScale = Config.Bind("General", "GenerationScale", ScalePreset.Normal, "A lot of people were telling me they don't like the overly large interior even though I personally prefer it. Because of this I've introduced this config where the default is now a much smaller generation but you can choose to play with the large scale if you prefer a challenge. The smaller default preset will lead more often to floors generating without any branch paths and dead ends.");
 
-                musicVolume = Config.Bind("General", "ElevatorMusicVolume", 100f, "Set the volume of music played in the elevator. (0 - 100)");
-                elevatorMusicPitchdown = Config.Bind("General", "ElevatorMusicPitchDown", false, "Change the pitch of the elevator music. (bc i like it)");
+                musicVolume = Config.Bind("General", "ElevatorMusicVolume", 100f, "Set the volume of music played in the elevator. (0 - 100) (Client Sided)");
+                elevatorMusicPitchdown = Config.Bind("General", "ElevatorMusicPitchDown", false, "Change the pitch of the elevator music. (bc i like it) (Client Sided)");
 
-                cameraDisable = Config.Bind("General", "Disable Camera", false, "Disable cameras inside the office.");
-                cameraFrameSpeed = Config.Bind("General", "Camera Frame Speed", 10, "Specifies the camera speed inside the office. When set to a negative value uses the game's frame rate. (FPS)");
+                cameraDisable = Config.Bind("General", "Disable Camera", false, "Disable cameras inside the office. (Client Sided)");
+                controlRoomCameraDisable = Config.Bind("General", "Disable Control Room Camera", false, "Disable camera inside the apparatus room. (Client Sided)");
+                cameraFrameSpeed = Config.Bind("General", "Camera Frame Speed", 10, "Specifies the camera speed inside the office. When set to a negative value uses the game's frame rate. (FPS) (Client Sided)");
 
                 officeMod = ExtendedMod.Create("LC Office", "Piggy");
 
@@ -108,25 +116,45 @@ namespace LCOffice
                     }
                 });
 
-                officeMod.ExtendedDungeonFlows.Add(officeDungeon);
-
-                officeExtender = Bundle.LoadAsset<DunGenExtender>("Assets/LethalCompany/Mods/LCOffice/OfficeExtender.asset");
-
                 int mainpaths = (int)mainPaths.Value;
                 switch (mainpaths)
                 {
                     case 1:
-                        officeDungeon.DungeonFlow.Length = new IntRange(8, 10);
-                        officeDungeon.DungeonFlow.BranchCount = new IntRange(6, 8);
+                        switch (generationScale.Value)
+                        {
+                            case ScalePreset.Large:
+                                officeDungeon.DungeonFlow.Length = new IntRange(8, 10);
+                                officeDungeon.DungeonFlow.BranchCount = new IntRange(4, 7);
+                                break;
+                            default:
+                                officeDungeon.DungeonFlow.Length = new IntRange(5, 8);
+                                officeDungeon.DungeonFlow.BranchCount = new IntRange(3, 6);
+                                break;
+                        }
                         break;
                     default:
-                        officeDungeon.DungeonFlow.Length = new IntRange(6, 6);
-                        officeDungeon.DungeonFlow.BranchCount = new IntRange(3, 5);
+                        switch (generationScale.Value)
+                        {
+                            case ScalePreset.Large:
+                                officeDungeon.DungeonFlow.Length = new IntRange(5, 6);
+                                officeDungeon.DungeonFlow.BranchCount = new IntRange(2, 3);
+                                break;
+                            default:
+                                officeDungeon.DungeonFlow.Length = new IntRange(2, 3);
+                                officeDungeon.DungeonFlow.BranchCount = new IntRange(1, 3);
+                                break;
+                        }
                         break;
                 }
-                officeExtender.Properties.MainPathProperties.MainPathCount = mainpaths;
 
+                officeMod.ExtendedDungeonFlows.Add(officeDungeon);
+
+                officeExtender = Bundle.LoadAsset<DunGenExtender>("Assets/LethalCompany/Mods/LCOffice/OfficeExtender.asset");
+                officeExtender.Properties.MainPathProperties.MainPathCount = mainpaths;
+                officeExtender.DungeonFlow = officeDungeon.DungeonFlow;
                 DunGenPlus.API.AddDunGenExtender(officeDungeon.DungeonFlow, officeExtender);
+
+                mls.LogInfo($"Office registered with Length: (min: {officeDungeon.DungeonFlow.Length.Min}, max: {officeDungeon.DungeonFlow.Length.Max}) BranchCount: (min: {officeDungeon.DungeonFlow.BranchCount.Min}, max: {officeDungeon.DungeonFlow.BranchCount.Max})");
 
                 if (configEnableScraps.Value)
                 {
