@@ -1,4 +1,5 @@
-﻿using HarmonyLib;
+﻿using BepInEx;
+using HarmonyLib;
 using LCOffice.Components;
 using System;
 
@@ -34,7 +35,7 @@ namespace LCOffice.Patches
         [HarmonyPatch("RunTerminalEvents")]
         private static void RunTerminalEvents_Prefix(TerminalNode node)
         {
-            if (ElevatorSystem.System != null && node != null && node.terminalEvent.Length == 3 && node.terminalEvent.StartsWith("el") && int.TryParse(node.terminalEvent[2].ToString(), out int floor))
+            if (ElevatorSystem.System != null && node != null && !node.terminalEvent.IsNullOrWhiteSpace() && node.terminalEvent.Length == 3 && node.terminalEvent.StartsWith("el") && int.TryParse(node.terminalEvent[2].ToString(), out int floor))
             {
                 ElevatorSystem.System.ElevatorTriggerServerRpc(floor - 1);
             }

@@ -17,11 +17,12 @@ namespace LCOffice
 {
     [BepInPlugin(modGUID, modName, modVersion)]
     [BepInDependency("JacobG5.JLL", BepInDependency.DependencyFlags.HardDependency)]
+    [BepInDependency("Zaggy1024.PathfindingLib", BepInDependency.DependencyFlags.HardDependency)]
     public class Plugin : BaseUnityPlugin
     {
         private const string modGUID = "Piggy.LCOffice";
         private const string modName = "LCOffice";
-        private const string modVersion = "2.2.0";
+        private const string modVersion = "2.3.0";
 
         private readonly Harmony harmony = new(modGUID);
 

@@ -1,13 +1,33 @@
 ﻿using DunGen;
 using JLL.Components;
 using System.Collections.Generic;
-using Unity.Netcode;
 using UnityEngine;
 
 namespace LCOffice.Components
 {
     public class ElevatorController : MonoBehaviour, IDungeonLoadListener
     {
+        [System.Serializable]
+        public class NoticeBoard
+        {
+            public Doorway[] sockets;
+            public GameObject indicator;
+            public GameObject blocker;
+            public SpriteRenderer elevatorLight;
+
+            public bool DoorwayConnected()
+            {
+                foreach (Doorway socket in sockets)
+                {
+                    if (socket.ConnectedDoorway != null)
+                    {
+                        return true;
+                    }
+                }
+                return false;
+            }
+        }
+
         public Animator animator;
         public Animator doorAnim;
 
@@ -30,14 +50,11 @@ namespace LCOffice.Components
         public ElevatorMusic music;
 
         [Header("Notice Board")]
-        public Doorway[] topSockets;
-        public GameObject topBlocker;
-        public Doorway[] midSockets;
-        public GameObject midBlocker;
-        public Doorway[] bottomSockets;
-        public GameObject bottomBlocker;
+        public NoticeBoard[] notices = [];
 
-        public GameObject[] floorIndicators;
+        [Header("PathfindingLib")]
+        public Transform insidePos;
+        public Transform[] floorPos;
 
         private void Start()
         {
@@ -50,21 +67,12 @@ namespace LCOffice.Components
         {
             ElevatorSystem.Spawn(transform);
 
-            topBlocker.SetActive(!DoorwayConnected(topSockets));
-            midBlocker.SetActive(!DoorwayConnected(midSockets));
-            bottomBlocker.SetActive(!DoorwayConnected(bottomSockets));
-        }
-
-        private bool DoorwayConnected(Doorway[] sockets)
-        {
-            foreach (Doorway socket in sockets)
+            foreach(NoticeBoard notice in notices)
             {
-                if (socket.ConnectedDoorway != null)
-                {
-                    return true;
-                }
+                bool connected = notice.DoorwayConnected();
+                notice.indicator.SetActive(connected);
+                notice.blocker.SetActive(!connected);
             }
-            return false;
         }
 
         public void OpenDoor(int floor)
